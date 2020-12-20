@@ -1,0 +1,15 @@
+h1 {
+    text-align: center;
+    color: white;
+}
+
+body {
+    background-color: #343434;
+}
+
+#mainCanvas {
+    border: solid;
+    margin: 0px auto;
+    display: block;
+    background-color: white;
+}
