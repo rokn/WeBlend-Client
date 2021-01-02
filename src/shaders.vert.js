@@ -1,4 +1,5 @@
-﻿export const vShader =`
+﻿// language=GLSL
+export const vShader =`
 	uniform mat4 uProjectionMatrix;
 	uniform mat4 uViewMatrix;
 	uniform mat4 uModelMatrix;
@@ -30,27 +31,16 @@
 	}
 `
 
-export const fShader = `
-	precision mediump float;
-	varying vec3 vColor;
-	void main( )
-	{
-		gl_FragColor = vec4(vColor,1);
-	}
-`
-
+// language=GLSL
 export const simpVShader = `
+    uniform mat4 uProjectionMatrix;
+    uniform mat4 uViewMatrix;
+    uniform mat4 uModelMatrix;
+    
     attribute vec3 aXYZ;
     void main ()
     {
-        gl_Position = vec4(aXYZ,1);
-    }
-`
-
-export const simpFShader = `
-    precision mediump float;
-    void main( )
-    {
-        gl_FragColor = vec4(1,1,1,1);
+        mat4 mvMatrix = uViewMatrix * uModelMatrix;
+        gl_Position = uProjectionMatrix * mvMatrix * vec4(aXYZ,1);
     }
 `

@@ -1,2 +1,0 @@
-function initializeContext(id) {
-}

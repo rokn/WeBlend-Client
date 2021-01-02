@@ -1,4 +1,4 @@
-import { hexToRgb } from './utils.js'
+import { hexToRgb } from '../utils.js'
 
 export class Viewport {
     constructor(canvasId) {
@@ -21,6 +21,8 @@ export class Viewport {
         this._modifyGLInstance();
 
         this.root = undefined;
+        this.width = canvas.width;
+        this.height = canvas.height;
     }
 
 
