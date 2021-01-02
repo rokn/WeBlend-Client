@@ -1,4 +1,5 @@
 import { hexToRgb } from '../utils.js'
+import { Camera } from '../scene'
 
 export class Viewport {
     constructor(canvasId) {
@@ -20,7 +21,10 @@ export class Viewport {
         this.programVariables = {}
         this._modifyGLInstance();
 
-        this.root = undefined;
+        this._addCanvasEventListeners(canvas);
+
+        this.root = null;
+        this.viewportCamera = null;
         this.width = canvas.width;
         this.height = canvas.height;
     }
@@ -85,6 +89,16 @@ export class Viewport {
         this.root.gl = this.gl;
     }
 
+    setCamera(camera) {
+        this.viewportCamera = camera;
+        this.viewportCamera.gl = this.gl;
+
+        const uProjectionMatrix = this.gl.getParamLocation('uProjectionMatrix');
+        this.gl.uniformMatrix4fv(uProjectionMatrix,false, this.viewportCamera.getPerspectiveMatrix());
+
+        this._updateViewMatrix();
+    }
+
     draw() {
         const gl = this.gl;
         gl.enable(gl.DEPTH_TEST);
@@ -94,6 +108,11 @@ export class Viewport {
         if (this.root) {
             this.root.draw(gl)
         }
+    }
+
+    _updateViewMatrix() {
+        const uViewMatrix = this.gl.getParamLocation('uViewMatrix');
+        this.gl.uniformMatrix4fv(uViewMatrix,false, this.viewportCamera.getViewMatrix());
     }
 
     _modifyGLInstance() {
@@ -120,5 +139,31 @@ export class Viewport {
         // this.gl.disableAttribute = function(name) {
         //     gl.disableVertexAttribArray(viewport.programVariables[name])
         // }
+    }
+
+    _addCanvasEventListeners(canvas) {
+        let dragX = null;
+        let dragY = null;
+        let isDragging = false;
+        canvas.addEventListener('mousedown', e => {
+            isDragging = true;
+            dragX = e.offsetX;
+            dragY = e.offsetY;
+            horizontalAngleDrag = horizontalAngle;
+            verticalAngleDrag = verticalAngle;
+        });
+        canvas.addEventListener('mousemove', e => {
+            if (manualMovement && isDragging) {
+                let diffX = e.offsetX - dragX;
+                let diffY = e.offsetY - dragY;
+                horizontalAngle = horizontalAngleDrag - diffX / 100;
+                verticalAngle = verticalAngleDrag - diffY / 100;
+            }
+        });
+        canvas.addEventListener('mouseup', e => {
+            if (manualMovement && isDragging) {
+                isDragging = false;
+            }
+        });
     }
 }

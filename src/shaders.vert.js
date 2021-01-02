@@ -19,6 +19,7 @@ export const vShader =`
 	
 	void main ()
 	{
+        gl_PointSize = 5.0;
 		mat4 mvMatrix = uViewMatrix * uModelMatrix;
 		gl_Position = uProjectionMatrix * mvMatrix * vec4(aXYZ,1);
 		mat4 nMatrix = uUseNormalMatrix?uNormalMatrix:mvMatrix;
@@ -40,6 +41,7 @@ export const simpVShader = `
     attribute vec3 aXYZ;
     void main ()
     {
+        gl_PointSize = 3.0;
         mat4 mvMatrix = uViewMatrix * uModelMatrix;
         gl_Position = uProjectionMatrix * mvMatrix * vec4(aXYZ,1);
     }

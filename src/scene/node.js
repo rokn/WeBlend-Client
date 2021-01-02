@@ -8,10 +8,12 @@ export class Node {
         this.children = [];
         this.transform = new Transform();
         this.transform.onChanged(this)
+        this._modelMatrix = mat4.create();
 
         this.gl = undefined;
         this.parent = parent;
         this.props = {};
+        this._drawWireframe = false;
         if (this.parent) {
             this.parent.addChild(this)
         }
@@ -28,18 +30,22 @@ export class Node {
         this.props.indices = indices;
         this._generateBuffer();
 
+        this._geomBuf = gl.createBuffer();
         this._verticesBuffer = gl.createBuffer();
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, this._verticesBuffer);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._geomBuf);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this._buffer), gl.DYNAMIC_DRAW);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._verticesBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.props.vertices), gl.DYNAMIC_DRAW);
     }
 
     draw() {
         const gl = this.gl;
-        if (this._verticesBuffer) {
+        if (this._geomBuf) {
 
             const uModelMatrix = gl.getParamLocation('uModelMatrix');
-            gl.uniformMatrix4fv(uModelMatrix,false, this.transform.toModelMatrix(mat4.create()));
+            gl.uniformMatrix4fv(uModelMatrix,false, this._modelMatrix);
 
             const aXYZ = gl.getParamLocation('aXYZ');
             const aNormal = gl.getParamLocation('aNormal');
@@ -47,7 +53,7 @@ export class Node {
 
             gl.vertexAttrib3fv(aColor,[1,0,0]);
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, this._verticesBuffer);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._geomBuf);
             gl.enableVertexAttribArray(aXYZ);
             gl.vertexAttribPointer(aXYZ,3,gl.FLOAT,false,6*gl.FLOATS,0*gl.FLOATS);
 
@@ -60,9 +66,17 @@ export class Node {
             gl.drawArrays(gl.TRIANGLES, 0, this.props.indices.length);
             gl.disable(gl.POLYGON_OFFSET_FILL);
 
-            gl.vertexAttrib3fv(aColor,[1,1,0]);
-            for (var i=0; i<this.props.indices.length; i++)
-                gl.drawArrays(gl.LINE_LOOP, 3*i, 3);
+            if (this._drawWireframe) {
+                gl.vertexAttrib3fv(aColor,[0,0,0]);
+                for (let i=0; i<this.props.indices.length; i+=3)
+                    gl.drawArrays(gl.LINE_LOOP, i, 3);
+            }
+
+
+            gl.vertexAttrib3fv(aColor,[0,0,0]);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._verticesBuffer);
+            gl.vertexAttribPointer(aXYZ,3,gl.FLOAT,false,3*gl.FLOATS,0*gl.FLOATS);
+            gl.drawArrays(gl.POINTS, 0, this.props.vertices.length/3);
         }
 
         for (let i = 0; i < this.children.length; i++) {
@@ -71,7 +85,15 @@ export class Node {
     }
 
     onTransformChanged() {
-        // nop
+        this._updateModelMatrix();
+    }
+
+    toggleWireframe(toggle) {
+        this._drawWireframe = toggle;
+    }
+
+    _updateModelMatrix() {
+        this.transform.toModelMatrix(this._modelMatrix);
     }
 
     _getVertex(index) {
@@ -92,7 +114,6 @@ export class Node {
             const b = this._getVertex(indices[i+1]);
             const c = this._getVertex(indices[i+2]);
             const res = calculateNormal(a, b, c);
-            console.log(res);
             this._buffer.push(...a, ...res);
             this._buffer.push(...b, ...res);
             this._buffer.push(...c, ...res);
