@@ -1,6 +1,6 @@
 import {Node} from './node.js';
 import {mat4, vec3} from '../../lib/gl-matrix'
-import {radians} from '../utils.js';
+import {radians, clamp} from '../utils.js';
 
 
 export class Camera extends Node {
@@ -10,9 +10,10 @@ export class Camera extends Node {
         this.perspectiveMatrix = mat4.create();
         //TODO: Probably not the best way to do this
         this.transform.position = vec3.fromValues(...position);
+        this.props.distance = 5;
         this.setTarget(target, false);
         this.setUp(up, false);
-        this._updateViewMatrix();
+        this._updatePosition();
     }
 
     getViewMatrix() {
@@ -37,7 +38,7 @@ export class Camera extends Node {
     setTarget(newTarget, update=true) {
         this.props.target = vec3.fromValues(...newTarget);
         if (update)
-            this._updateViewMatrix();
+            this._updatePosition();
     }
 
     setUp(newUp, update=true) {
@@ -46,9 +47,42 @@ export class Camera extends Node {
             this._updateViewMatrix();
     }
 
+    up() {
+        return this.props.up;
+    }
+
+    front() {
+        return vec3.sub(vec3.create(), this.props.target, this.transform.position);
+    }
+
+    target() {
+        return this.props.target;
+    }
+
+    _updatePosition() {
+        const r = this.props.distance;
+        const rot = this.transform.rotation.map(radians);
+
+        this.transform.position[0] = this.props.target[0] + r * Math.sin(rot[0]) * Math.sin(rot[2]);
+        this.transform.position[1] = this.props.target[1] + r * Math.sin(rot[0]) * Math.cos(rot[2]);
+        this.transform.position[2] = this.props.target[2] + r * Math.cos(rot[0]);
+
+        this._updateViewMatrix();
+    }
+
+    setDistance(distance) {
+        this.props.distance = distance;
+        this._updatePosition();
+    }
+
+    zoom(amount) {
+        this.setDistance(this.props.distance + amount);
+    }
+
     onTransformChanged(newTransform) {
         Node.prototype.onTransformChanged.call(this, newTransform);
-        this._updateViewMatrix();
+        this.transform.rotation[0] = clamp(0.0001, 179.9999, this.transform.rotation[0]);
+        this._updatePosition();
     }
 
     _updateViewMatrix() {

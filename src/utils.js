@@ -20,3 +20,14 @@ export function calculateNormal(a, b, c) {
     const V = vec3.sub(vec3.create(), c, a);
     return vec3.cross(vec3.create(), U, V);
 }
+
+export function clamp(a, b, v) {
+    if (v < a) {
+        return a;
+    }
+    if (v > b) {
+        return b;
+    }
+
+    return v;
+}

@@ -8,7 +8,8 @@ export class Transform {
                 scale = [1,1,1],
                 origin=[0,0,0]) {
         this.position = vec3.fromValues(...position);
-        this.rotation = quat.fromEuler(quat.create(), ...rotation);
+        this.rotation = vec3.fromValues(...rotation.slice());
+        this._rotation = quat.fromEuler(quat.create(), ...rotation);
         this.scale = vec3.fromValues(...scale);
         this.origin = vec3.fromValues(...origin);
 
@@ -40,7 +41,8 @@ export class Transform {
     }
 
     setRotation(rotation) {
-        quat.fromEuler(this.rotation, ...rotation);
+        this.rotation = vec3.fromValues(...rotation);
+        quat.fromEuler(this._rotation, ...rotation);
         this._callOnChanged();
     }
 
@@ -57,7 +59,7 @@ export class Transform {
     toModelMatrix(modelMatrix) {
         return mat4.fromRotationTranslationScaleOrigin(
             modelMatrix,
-            this.rotation,
+            this._rotation,
             this.position,
             this.scale,
             this.origin

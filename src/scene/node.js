@@ -77,6 +77,9 @@ export class Node {
             gl.bindBuffer(gl.ARRAY_BUFFER, this._verticesBuffer);
             gl.vertexAttribPointer(aXYZ,3,gl.FLOAT,false,3*gl.FLOATS,0*gl.FLOATS);
             gl.drawArrays(gl.POINTS, 0, this.props.vertices.length/3);
+
+            gl.disableVertexAttribArray(aXYZ);
+            gl.disableVertexAttribArray(aNormal);
         }
 
         for (let i = 0; i < this.children.length; i++) {

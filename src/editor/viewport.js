@@ -1,5 +1,5 @@
 import { hexToRgb } from '../utils.js'
-import { Camera } from '../scene'
+import { mat4,vec3 } from '../../lib/gl-matrix'
 
 export class Viewport {
     constructor(canvasId) {
@@ -27,6 +27,7 @@ export class Viewport {
         this.viewportCamera = null;
         this.width = canvas.width;
         this.height = canvas.height;
+        this._setUpAxisLines();
     }
 
 
@@ -101,9 +102,13 @@ export class Viewport {
 
     draw() {
         const gl = this.gl;
+        this._updateViewMatrix();
+
         gl.enable(gl.DEPTH_TEST);
         gl.clearColor(...hexToRgb('#686868'));
         gl.clear(gl.COLOR_BUFFER_BIT+gl.DEPTH_BUFFER_BIT);
+
+        this._drawAxisLines();
 
         if (this.root) {
             this.root.draw(gl)
@@ -144,26 +149,106 @@ export class Viewport {
     _addCanvasEventListeners(canvas) {
         let dragX = null;
         let dragY = null;
-        let isDragging = false;
+        let isRotating = false;
+        let isPanning = false;
+
+        let startXRot = null;
+        let startZRot = null;
+
+        let startPos = null;
+        let localXVec = vec3.create();
+        let localYVec = vec3.create();
+
         canvas.addEventListener('mousedown', e => {
-            isDragging = true;
-            dragX = e.offsetX;
-            dragY = e.offsetY;
-            horizontalAngleDrag = horizontalAngle;
-            verticalAngleDrag = verticalAngle;
+            if (e.button === 1)  {
+                e.preventDefault();
+                dragX = e.offsetX;
+                dragY = e.offsetY;
+
+                if (e.getModifierState('Shift')) {
+                    isPanning = true;
+                    startPos = vec3.clone(this.viewportCamera.target());
+                    vec3.cross(localXVec, this.viewportCamera.front(), this.viewportCamera.up())
+                    vec3.cross(localYVec, localXVec, this.viewportCamera.front())
+                    vec3.normalize(localXVec, localXVec);
+                    vec3.normalize(localYVec, localYVec);
+                } else {
+                    isRotating = true;
+                    startXRot = this.viewportCamera.transform.rotation[0];
+                    startZRot = this.viewportCamera.transform.rotation[2];
+                }
+            } else {
+                return;
+            }
         });
+
         canvas.addEventListener('mousemove', e => {
-            if (manualMovement && isDragging) {
-                let diffX = e.offsetX - dragX;
-                let diffY = e.offsetY - dragY;
-                horizontalAngle = horizontalAngleDrag - diffX / 100;
-                verticalAngle = verticalAngleDrag - diffY / 100;
+            if (isRotating || isPanning) {
+                e.preventDefault();
+                const diffX = e.offsetX - dragX;
+                const diffY = e.offsetY - dragY;
+                if (isRotating) {
+                    const newXRot = startXRot - diffY / 3;
+                    const newZRot = startZRot + diffX / 3;
+                    this.viewportCamera.transform.setRotation([newXRot, 0, newZRot]);
+                } else {
+                    let newPos = vec3.clone(startPos);
+                    vec3.add(newPos, newPos, vec3.scale(vec3.create(), localXVec, -diffX/300));
+                    vec3.add(newPos, newPos, vec3.scale(vec3.create(), localYVec, diffY/300));
+                    this.viewportCamera.setTarget(newPos);
+                }
             }
         });
         canvas.addEventListener('mouseup', e => {
-            if (manualMovement && isDragging) {
-                isDragging = false;
-            }
+            isRotating = false;
+            isPanning = false;
         });
+
+        canvas.addEventListener('wheel', e => {
+            e.preventDefault();
+            this.viewportCamera.zoom(e.deltaY/60);
+        })
+    }
+
+    _setUpAxisLines() {
+        const gl = this.gl;
+        this._axisLinesBuffer = gl.createBuffer();
+
+        const axisLines = [
+            -99999, 0, 0, 1, 0, 0,
+            +99999, 0, 0, 1, 0, 0,
+            0, -99999, 0, 0, 1, 0,
+            0, +99999, 0, 0, 1, 0,
+        ];
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._axisLinesBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(axisLines), gl.STATIC_DRAW);
+    }
+
+    _drawAxisLines() {
+        const gl = this.gl;
+        const uModelMatrix = gl.getParamLocation('uModelMatrix');
+        gl.uniformMatrix4fv(uModelMatrix,false, mat4.create());
+
+        //TODO: TEMP FIX
+        const uAmbientColor = gl.getParamLocation('uAmbientColor');
+        gl.uniform3fv(uAmbientColor,[1,1,1]);
+
+        const aXYZ = gl.getParamLocation('aXYZ');
+        const aColor = gl.getParamLocation('aColor');
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._axisLinesBuffer);
+        gl.enableVertexAttribArray(aXYZ);
+        gl.vertexAttribPointer(aXYZ,3,gl.FLOAT,false,6*gl.FLOATS,0*gl.FLOATS);
+
+        gl.enableVertexAttribArray(aColor);
+        gl.vertexAttribPointer(aColor,3,gl.FLOAT,false,6*gl.FLOATS,3*gl.FLOATS);
+
+        gl.drawArrays(gl.LINES, 0, 4);
+        gl.disableVertexAttribArray(aXYZ);
+        gl.disableVertexAttribArray(aColor);
+
+        //TODO: TEMP FIX
+        gl.uniform3fv(uAmbientColor,[0.3,0.3,0.3]);
     }
 }
