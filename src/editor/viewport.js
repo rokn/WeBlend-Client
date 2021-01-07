@@ -128,22 +128,6 @@ export class Viewport {
         this.gl.getParamLocation = function(name) {
             return viewport.programVariables[name];
         }
-
-        // this.gl.setParam = function(name, value, funcName, expand) {
-        //     if (expand) {
-        //         gl[funcName](viewport.programVariables[name], ...value)
-        //     } else {
-        //         gl[funcName](viewport.programVariables[name], value)
-        //     }
-        // }
-        //
-        // this.gl.enableAttribute = function(name) {
-        //     gl.enableVertexAttribArray(viewport.programVariables[name])
-        // }
-        //
-        // this.gl.disableAttribute = function(name) {
-        //     gl.disableVertexAttribArray(viewport.programVariables[name])
-        // }
     }
 
     _addCanvasEventListeners(canvas) {
@@ -167,9 +151,9 @@ export class Viewport {
 
                 if (e.getModifierState('Shift')) {
                     isPanning = true;
-                    startPos = vec3.clone(this.viewportCamera.target());
-                    vec3.cross(localXVec, this.viewportCamera.front(), this.viewportCamera.up())
-                    vec3.cross(localYVec, localXVec, this.viewportCamera.front())
+                    startPos = vec3.clone(this.viewportCamera.target);
+                    vec3.cross(localXVec, this.viewportCamera.front, this.viewportCamera.up)
+                    vec3.cross(localYVec, localXVec, this.viewportCamera.front)
                     vec3.normalize(localXVec, localXVec);
                     vec3.normalize(localYVec, localYVec);
                 } else {
@@ -192,21 +176,26 @@ export class Viewport {
                     const newZRot = startZRot + diffX / 3;
                     this.viewportCamera.transform.setRotation([newXRot, 0, newZRot]);
                 } else {
+                    const dist = this.viewportCamera.distance;
                     let newPos = vec3.clone(startPos);
-                    vec3.add(newPos, newPos, vec3.scale(vec3.create(), localXVec, -diffX/300));
-                    vec3.add(newPos, newPos, vec3.scale(vec3.create(), localYVec, diffY/300));
+                    vec3.add(newPos, newPos, vec3.scale(vec3.create(), localXVec, dist*(-diffX)/1300));
+                    vec3.add(newPos, newPos, vec3.scale(vec3.create(), localYVec, dist*diffY/1300));
                     this.viewportCamera.setTarget(newPos);
                 }
             }
         });
+
         canvas.addEventListener('mouseup', e => {
             isRotating = false;
             isPanning = false;
         });
 
         canvas.addEventListener('wheel', e => {
+            if (isRotating || isPanning) {
+                return;
+            }
             e.preventDefault();
-            this.viewportCamera.zoom(e.deltaY/60);
+            this.viewportCamera.zoomRelative(1 + e.deltaY/800);
         })
     }
 

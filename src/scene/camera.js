@@ -47,16 +47,20 @@ export class Camera extends Node {
             this._updateViewMatrix();
     }
 
-    up() {
+    get up() {
         return this.props.up;
     }
 
-    front() {
+    get front() {
         return vec3.sub(vec3.create(), this.props.target, this.transform.position);
     }
 
-    target() {
+    get target() {
         return this.props.target;
+    }
+
+    get distance() {
+        return this.props.distance;
     }
 
     _updatePosition() {
@@ -77,6 +81,10 @@ export class Camera extends Node {
 
     zoom(amount) {
         this.setDistance(this.props.distance + amount);
+    }
+
+    zoomRelative(relativeDistance) {
+        this.setDistance(this.props.distance * relativeDistance);
     }
 
     onTransformChanged(newTransform) {

@@ -10,8 +10,8 @@ const root = new Node('__root', null);
 viewport.setRoot(root);
 
 const camera = new Camera('Viewport Camera', [0,-5,8], [0,0,0], [0,0,1], null);
-camera.setAsPerspective(30, viewport.width, viewport.height, 1, 40000);
-camera.transform.setRotation([0,0,0]);
+camera.setAsPerspective(30, viewport.width, viewport.height, 0.1, 40000);
+camera.transform.setRotation([0,0,180]);
 viewport.setCamera(camera);
 
 const uAmbientColor = viewport.gl.getParamLocation('uAmbientColor');

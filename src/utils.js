@@ -31,3 +31,11 @@ export function clamp(a, b, v) {
 
     return v;
 }
+
+export function min(a, b) {
+    return Math.min(a, b);
+}
+
+export function max(a, b) {
+    return Math.max(a, b);
+}
