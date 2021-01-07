@@ -1,6 +1,7 @@
 import { Transform } from './transform.js';
 import { mat4, vec3 } from "../../lib/gl-matrix";
-import { calculateNormal } from "../utils.js";
+import { calculateNormal, min, max } from "../utils.js";
+import { AABB } from "./aabb.js";
 
 export class Node {
     constructor(name, parent) {
@@ -28,6 +29,7 @@ export class Node {
         const gl = this.gl;
         this.props.vertices = vertices;
         this.props.indices = indices;
+        this.props.color = [1, 0, 0]; // TODO: WTF NO
         this._generateBuffer();
 
         this._geomBuf = gl.createBuffer();
@@ -51,7 +53,7 @@ export class Node {
             const aNormal = gl.getParamLocation('aNormal');
             const aColor = gl.getParamLocation('aColor');
 
-            gl.vertexAttrib3fv(aColor,[1,0,0]);
+            gl.vertexAttrib3fv(aColor,this.props.color);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this._geomBuf);
             gl.enableVertexAttribArray(aXYZ);
@@ -93,6 +95,26 @@ export class Node {
 
     toggleWireframe(toggle) {
         this._drawWireframe = toggle;
+    }
+
+    getAABB() {
+        if (!this.props.vertices || !this.props.vertices.length) {
+            return null;
+        }
+
+        let minPoint = vec3.fromValues(this.props.vertices[0], this.props.vertices[1], this.props.vertices[2]);
+        let maxPoint = vec3.clone(minPoint);
+        for (let i = 3; i < this.props.vertices.length; i+=3) {
+            minPoint[0] = min(minPoint[0], this.props.vertices[i  ]);
+            minPoint[1] = min(minPoint[1], this.props.vertices[i+1]);
+            minPoint[2] = min(minPoint[2], this.props.vertices[i+2]);
+
+            maxPoint[0] = max(maxPoint[0], this.props.vertices[i  ]);
+            maxPoint[1] = max(maxPoint[1], this.props.vertices[i+1]);
+            maxPoint[2] = max(maxPoint[2], this.props.vertices[i+2]);
+        }
+
+        return new AABB(minPoint, maxPoint);
     }
 
     _updateModelMatrix() {

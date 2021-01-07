@@ -1,5 +1,6 @@
 import { hexToRgb } from '../utils.js'
 import { mat4,vec3 } from '../../lib/gl-matrix'
+import {AABB, Ray} from "../scene";
 
 export class Viewport {
     constructor(canvasId) {
@@ -161,6 +162,28 @@ export class Viewport {
                     startXRot = this.viewportCamera.transform.rotation[0];
                     startZRot = this.viewportCamera.transform.rotation[2];
                 }
+            } else if (e.button === 0) {
+                e.preventDefault();
+                const aabb = this.root.children[0].getAABB();
+                const nearVec = vec3.fromValues(e.offsetX, e.offsetY+1, 0);
+                const farVec = vec3.fromValues(e.offsetX, e.offsetY+1, 0.99);
+                const from = this.viewportCamera.unproject(nearVec, 0, 0, canvas.width, canvas.height);
+                const to = this.viewportCamera.unproject(farVec, 0, 0, canvas.width, canvas.height);
+                const r = new Ray(from, vec3.sub(vec3.create(), to, from));
+
+                const rayLine = [
+                    from[0], from[1], from[2],
+                    to[0], to[1], to[2],
+                ]
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._rayLine);
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(rayLine), this.gl.STATIC_DRAW);
+
+                const res = r.intersectAABB(aabb);
+                if (res.hit) {
+                    this.root.children[0].props.color = [1,1,0];
+                } else {
+                    this.root.children[0].props.color = [1,0,0];
+                }
             } else {
                 return;
             }
@@ -202,6 +225,7 @@ export class Viewport {
     _setUpAxisLines() {
         const gl = this.gl;
         this._axisLinesBuffer = gl.createBuffer();
+        this._rayLine = gl.createBuffer();
 
         const axisLines = [
             -99999, 0, 0, 1, 0, 0,
@@ -210,8 +234,16 @@ export class Viewport {
             0, +99999, 0, 0, 1, 0,
         ];
 
+        const rayLines = [
+            0, 0, 0,
+            0, 0, 0,
+        ];
+
         gl.bindBuffer(gl.ARRAY_BUFFER, this._axisLinesBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(axisLines), gl.STATIC_DRAW);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._rayLine);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(rayLines), gl.STATIC_DRAW);
     }
 
     _drawAxisLines() {
@@ -236,6 +268,14 @@ export class Viewport {
         gl.drawArrays(gl.LINES, 0, 4);
         gl.disableVertexAttribArray(aXYZ);
         gl.disableVertexAttribArray(aColor);
+
+        //Ray Drawing Debug
+        gl.vertexAttrib3f(aColor, 0,0,0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._rayLine);
+        gl.enableVertexAttribArray(aXYZ);
+        gl.vertexAttribPointer(aXYZ,3,gl.FLOAT,false,3*gl.FLOATS,0*gl.FLOATS);
+        gl.drawArrays(gl.LINES, 0, 4);
+        gl.disableVertexAttribArray(aXYZ);
 
         //TODO: TEMP FIX
         gl.uniform3fv(uAmbientColor,[0.3,0.3,0.3]);

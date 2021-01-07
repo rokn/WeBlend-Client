@@ -49,8 +49,8 @@ var data = [].concat(
 
 let triangles = []
 
-for (let j = 0; j < 50; j++) {
-    for (let i = 0; i < 50; i++) {
+for (let j = 0; j < 1; j++) {
+    for (let i = 0; i < 1; i++) {
         const triangle = new Node('Triangle' + i, root);
         triangle.setMeshData(v, data);
         triangle.toggleWireframe(true)
