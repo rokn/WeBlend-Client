@@ -1,6 +1,21 @@
 import { hexToRgb } from '../utils.js'
-import { mat4,vec3 } from '../../lib/gl-matrix'
-import {AABB, Ray} from "../scene";
+import { mat4 } from '../../lib/gl-matrix'
+import {
+    KEY_DOWN,
+    KEY_UP,
+    Modifiers,
+    MOUSE_DOWN,
+    MOUSE_MOVE,
+    MOUSE_SCROLL,
+    MOUSE_UP,
+    MOUSEB_SCROLL,
+    MouseCommand,
+    PanTool,
+    ToolChooser
+} from './tools'
+import { CameraControl } from './camera_control.js'
+import {Ray} from "../scene";
+
 
 export class Viewport {
     constructor(canvasId) {
@@ -22,13 +37,14 @@ export class Viewport {
         this.programVariables = {}
         this._modifyGLInstance();
 
-        this._addCanvasEventListeners(canvas);
+        // this.cameraControl = new CameraControl(canvas, this.gl);
 
         this.root = null;
-        this.viewportCamera = null;
         this.width = canvas.width;
         this.height = canvas.height;
         this._setUpAxisLines();
+        this._setupTools();
+        this._setupEvents(canvas);
     }
 
 
@@ -92,18 +108,13 @@ export class Viewport {
     }
 
     setCamera(camera) {
-        this.viewportCamera = camera;
-        this.viewportCamera.gl = this.gl;
-
-        const uProjectionMatrix = this.gl.getParamLocation('uProjectionMatrix');
-        this.gl.uniformMatrix4fv(uProjectionMatrix,false, this.viewportCamera.getPerspectiveMatrix());
-
-        this._updateViewMatrix();
+        camera.gl = this.gl;
+        // this.cameraControl.setCamera(camera);
     }
 
     draw() {
         const gl = this.gl;
-        this._updateViewMatrix();
+        // this.cameraControl.updateViewMatrix()
 
         gl.enable(gl.DEPTH_TEST);
         gl.clearColor(...hexToRgb('#686868'));
@@ -116,110 +127,13 @@ export class Viewport {
         }
     }
 
-    _updateViewMatrix() {
-        const uViewMatrix = this.gl.getParamLocation('uViewMatrix');
-        this.gl.uniformMatrix4fv(uViewMatrix,false, this.viewportCamera.getViewMatrix());
-    }
-
     _modifyGLInstance() {
         const viewport = this;
-        // const gl = this.gl;
         this.gl.FLOATS = Float32Array.BYTES_PER_ELEMENT;
 
         this.gl.getParamLocation = function(name) {
             return viewport.programVariables[name];
         }
-    }
-
-    _addCanvasEventListeners(canvas) {
-        let dragX = null;
-        let dragY = null;
-        let isRotating = false;
-        let isPanning = false;
-
-        let startXRot = null;
-        let startZRot = null;
-
-        let startPos = null;
-        let localXVec = vec3.create();
-        let localYVec = vec3.create();
-
-        canvas.addEventListener('mousedown', e => {
-            if (e.button === 1)  {
-                e.preventDefault();
-                dragX = e.offsetX;
-                dragY = e.offsetY;
-
-                if (e.getModifierState('Shift')) {
-                    isPanning = true;
-                    startPos = vec3.clone(this.viewportCamera.target);
-                    vec3.cross(localXVec, this.viewportCamera.front, this.viewportCamera.up)
-                    vec3.cross(localYVec, localXVec, this.viewportCamera.front)
-                    vec3.normalize(localXVec, localXVec);
-                    vec3.normalize(localYVec, localYVec);
-                } else {
-                    isRotating = true;
-                    startXRot = this.viewportCamera.transform.rotation[0];
-                    startZRot = this.viewportCamera.transform.rotation[2];
-                }
-            } else if (e.button === 0) {
-                e.preventDefault();
-                const aabb = this.root.children[0].getAABB();
-                const nearVec = vec3.fromValues(e.offsetX, e.offsetY+1, 0);
-                const farVec = vec3.fromValues(e.offsetX, e.offsetY+1, 0.99);
-                const from = this.viewportCamera.unproject(nearVec, 0, 0, canvas.width, canvas.height);
-                const to = this.viewportCamera.unproject(farVec, 0, 0, canvas.width, canvas.height);
-                const r = new Ray(from, vec3.sub(vec3.create(), to, from));
-
-                const rayLine = [
-                    from[0], from[1], from[2],
-                    to[0], to[1], to[2],
-                ]
-                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._rayLine);
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(rayLine), this.gl.STATIC_DRAW);
-
-                const res = r.intersectAABB(aabb);
-                if (res.hit) {
-                    this.root.children[0].props.color = [1,1,0];
-                } else {
-                    this.root.children[0].props.color = [1,0,0];
-                }
-            } else {
-                return;
-            }
-        });
-
-        canvas.addEventListener('mousemove', e => {
-            if (isRotating || isPanning) {
-                e.preventDefault();
-                const diffX = e.offsetX - dragX;
-                const diffY = e.offsetY - dragY;
-                if (isRotating) {
-                    const newXRot = startXRot - diffY / 3;
-                    const newZRot = startZRot + diffX / 3;
-                    this.viewportCamera.transform.setRotation([newXRot, 0, newZRot]);
-                } else {
-                    const dist = this.viewportCamera.distance;
-                    let newPos = vec3.clone(startPos);
-                    vec3.add(newPos, newPos, vec3.scale(vec3.create(), localXVec, dist*(-diffX)/1300));
-                    vec3.add(newPos, newPos, vec3.scale(vec3.create(), localYVec, dist*diffY/1300));
-                    this.viewportCamera.setTarget(newPos);
-                }
-            }
-        });
-
-        canvas.addEventListener('mouseup', e => {
-            isRotating = false;
-            isPanning = false;
-        });
-
-        canvas.addEventListener('wheel', e => {
-            if (isRotating || isPanning) {
-                return;
-            }
-            e.preventDefault();
-            this.viewportCamera.zoomRelative(1 + e.deltaY/800);
-        })
     }
 
     _setUpAxisLines() {
@@ -228,10 +142,10 @@ export class Viewport {
         this._rayLine = gl.createBuffer();
 
         const axisLines = [
-            -99999, 0, 0, 1, 0, 0,
-            +99999, 0, 0, 1, 0, 0,
-            0, -99999, 0, 0, 1, 0,
-            0, +99999, 0, 0, 1, 0,
+            -9999, 0, 0, 1, 0, 0,
+            +9999, 0, 0, 1, 0, 0,
+            0, -9999, 0, 0, 1, 0,
+            0, +9999, 0, 0, 1, 0,
         ];
 
         const rayLines = [
@@ -279,5 +193,68 @@ export class Viewport {
 
         //TODO: TEMP FIX
         gl.uniform3fv(uAmbientColor,[0.3,0.3,0.3]);
+    }
+
+    _setupTools() {
+        let toolCommands = [];
+
+        toolCommands.push({
+            command: new MouseCommand(MOUSE_DOWN, MOUSEB_SCROLL, null, null),
+            tool: new PanTool(),
+        });
+
+        this.mainTool = new ToolChooser(toolCommands);
+    }
+
+    _setupEvents(canvas) {
+        const handleEvent = (event) => {
+            event.viewport = this;
+            event.modifiers = new Modifiers(event.shiftKey, event.ctrlKey, event.altKey, event.metaKey);
+            event.consume =  event.preventDefault;
+            this.mainTool.handleEvent(event);
+        };
+
+        const addMouseEvent = evName => {
+            canvas.addEventListener(evName, event => {
+                switch(evName) {
+                    case 'mousedown':
+                        event.eventType = MOUSE_DOWN;
+                        canvas.focus();
+                        break;
+                    case 'mousemove':
+                        event.eventType = MOUSE_MOVE;
+                        break;
+                    case 'mouseup':
+                        event.eventType = MOUSE_UP;
+                        break;
+                    case 'wheel':
+                        event.eventType = MOUSE_SCROLL;
+                        break;
+                }
+                handleEvent(event);
+            })
+        };
+
+        const addKeyEvent = evName => {
+            canvas.addEventListener(evName, event => {
+                switch(evName) {
+                    case 'keydown':
+                        event.eventType = KEY_DOWN;
+                        break;
+                    case 'keyup':
+                        event.eventType = KEY_UP;
+                        break;
+                }
+                handleEvent(event);
+            })
+        };
+
+        addMouseEvent('mousedown');
+        addMouseEvent('mousemove');
+        addMouseEvent('mouseup');
+        addMouseEvent('wheel');
+
+        addKeyEvent('keydown');
+        addKeyEvent('keyup');
     }
 }

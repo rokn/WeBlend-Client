@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>WeBlend</title>
 <!--    <script src="http://localhost:3000/socket.io/socket.io.js"></script>-->
+    <script src="lib/hotkeys.js"></script>
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
@@ -12,7 +13,9 @@
         JavaScript is required!
     </noscript>
 
-    <canvas id="mainCanvas" width="1000" height="600"></canvas>
+    <div id="viewportWrapper" >
+        <canvas id="mainCanvas" width="1000" height="600" tabindex="0"></canvas>
+    </div>
     <script type="module" src="src/main.js"></script>
 </body>
 </html>
