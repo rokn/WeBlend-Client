@@ -1,5 +1,5 @@
 export * from './camera.js'
-export * from './node.js'
+export * from './nodes/node.js'
 export * from './transform.js'
 export * from './ray.js'
 export * from './aabb.js'

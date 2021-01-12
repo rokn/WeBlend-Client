@@ -1,4 +1,4 @@
-import {Node} from './node.js';
+import {Node} from './nodes/node.js';
 import {mat4, vec3, vec4} from '../../lib/gl-matrix'
 import {radians, clamp} from '../utils.js';
 

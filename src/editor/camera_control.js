@@ -3,7 +3,7 @@ import { vec3 } from '../../lib/gl-matrix'
 
 export class CameraControl {
     constructor(canvas, gl) {
-        this.registerHandlers(canvas);
+        // this.registerHandlers(canvas);
         this.viewportCamera = null;
         this.gl = gl;
     }
@@ -15,6 +15,10 @@ export class CameraControl {
         this.gl.uniformMatrix4fv(uProjectionMatrix,false, this.viewportCamera.getPerspectiveMatrix());
 
         this.updateViewMatrix();
+    }
+
+    get camera() {
+        return this.viewportCamera;
     }
 
     registerHandlers(canvas) {
@@ -49,27 +53,6 @@ export class CameraControl {
                     startZRot = this.viewportCamera.transform.rotation[2];
                 }
             } else if (e.button === 0) {
-                e.preventDefault();
-                const aabb = this.root.children[0].getAABB();
-                const nearVec = vec3.fromValues(e.offsetX, e.offsetY+1, 0);
-                const farVec = vec3.fromValues(e.offsetX, e.offsetY+1, 0.99);
-                const from = this.viewportCamera.unproject(nearVec, 0, 0, canvas.width, canvas.height);
-                const to = this.viewportCamera.unproject(farVec, 0, 0, canvas.width, canvas.height);
-                const r = new Ray(from, vec3.sub(vec3.create(), to, from));
-
-                const rayLine = [
-                    from[0], from[1], from[2],
-                    to[0], to[1], to[2],
-                ]
-                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._rayLine);
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(rayLine), this.gl.STATIC_DRAW);
-
-                const res = r.intersectAABB(aabb);
-                if (res.hit) {
-                    this.root.children[0].props.color = [1,1,0];
-                } else {
-                    this.root.children[0].props.color = [1,0,0];
-                }
             } else {
                 return;
             }

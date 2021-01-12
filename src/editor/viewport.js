@@ -1,20 +1,21 @@
 import { hexToRgb } from '../utils.js'
 import { mat4 } from '../../lib/gl-matrix'
 import {
+    CameraOrbitTool,
     KEY_DOWN,
     KEY_UP,
     Modifiers,
     MOUSE_DOWN,
     MOUSE_MOVE,
     MOUSE_SCROLL,
-    MOUSE_UP,
+    MOUSE_UP, MOUSEB_PRIMARY,
     MOUSEB_SCROLL,
-    MouseCommand,
-    PanTool,
-    ToolChooser
+    MouseCommand, NO_MOD,
+    PanTool, SelectObjectTool, SHIFT_MOD,
+    ToolChooser, ZoomTool
 } from './tools'
 import { CameraControl } from './camera_control.js'
-import {Ray} from "../scene";
+import {Store} from "./store.js";
 
 
 export class Viewport {
@@ -37,14 +38,27 @@ export class Viewport {
         this.programVariables = {}
         this._modifyGLInstance();
 
-        // this.cameraControl = new CameraControl(canvas, this.gl);
+        this._cameraControl = new CameraControl(canvas, this.gl);
+        this._store = new Store();
 
-        this.root = null;
+        this._root = null;
         this.width = canvas.width;
         this.height = canvas.height;
         this._setUpAxisLines();
         this._setupTools();
         this._setupEvents(canvas);
+    }
+
+    get cameraControl() {
+        return this._cameraControl;
+    }
+
+    get root() {
+        return this._root;
+    }
+
+    get store() {
+        return this._store;
     }
 
 
@@ -103,18 +117,18 @@ export class Viewport {
     }
 
     setRoot(newRoot) {
-        this.root = newRoot;
-        this.root.gl = this.gl;
+        this._root = newRoot;
+        this._root.gl = this.gl;
     }
 
     setCamera(camera) {
         camera.gl = this.gl;
-        // this.cameraControl.setCamera(camera);
+        this.cameraControl.setCamera(camera);
     }
 
     draw() {
         const gl = this.gl;
-        // this.cameraControl.updateViewMatrix()
+        this.cameraControl.updateViewMatrix()
 
         gl.enable(gl.DEPTH_TEST);
         gl.clearColor(...hexToRgb('#686868'));
@@ -199,8 +213,23 @@ export class Viewport {
         let toolCommands = [];
 
         toolCommands.push({
-            command: new MouseCommand(MOUSE_DOWN, MOUSEB_SCROLL, null, null),
+            command: new MouseCommand(MOUSE_DOWN, MOUSEB_SCROLL, null, null, SHIFT_MOD),
             tool: new PanTool(),
+        });
+
+        toolCommands.push({
+            command: new MouseCommand(MOUSE_DOWN, MOUSEB_SCROLL, null, null, NO_MOD),
+            tool: new CameraOrbitTool(),
+        });
+
+        toolCommands.push({
+            command: new MouseCommand(MOUSE_SCROLL, null, null, null, NO_MOD),
+            tool: new ZoomTool(),
+        });
+
+        toolCommands.push({
+            command: new MouseCommand(MOUSE_DOWN, MOUSEB_PRIMARY, null, null, null),
+            tool: new SelectObjectTool(),
         });
 
         this.mainTool = new ToolChooser(toolCommands);
@@ -209,6 +238,8 @@ export class Viewport {
     _setupEvents(canvas) {
         const handleEvent = (event) => {
             event.viewport = this;
+            event.store = this.store; // For easier access
+            event.sceneRoot = this.root; // For easier access
             event.modifiers = new Modifiers(event.shiftKey, event.ctrlKey, event.altKey, event.metaKey);
             event.consume =  event.preventDefault;
             this.mainTool.handleEvent(event);

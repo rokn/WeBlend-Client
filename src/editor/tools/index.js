@@ -1,3 +1,6 @@
 export * from './tool.js'
 export * from './tool_chooser.js'
 export * from './tool_pan.js'
+export * from './tool_camera_orbit.js'
+export * from './tool_zoom.js'
+export * from './tool_select_object.js'

@@ -1,6 +1,4 @@
 import {vec3,mat4,quat} from '../../lib/gl-matrix';
-import {radians} from '../utils.js';
-
 
 export class Transform {
     constructor(position = [0,0,0],
@@ -56,7 +54,7 @@ export class Transform {
         this._callOnChanged();
     }
 
-    toModelMatrix(modelMatrix) {
+    toNodeMatrix(modelMatrix) {
         return mat4.fromRotationTranslationScaleOrigin(
             modelMatrix,
             this._rotation,

@@ -2,6 +2,7 @@ import { vShader as vShader } from './shaders.vert.js';
 import { fShader as fShader } from './shaders.frag.js';
 import { Viewport } from './editor'
 import { Node, Camera } from './scene'
+import {GeometryNode} from "./scene/nodes";
 
 const viewport = new Viewport('mainCanvas')
 viewport.createProgram(vShader, fShader);
@@ -49,12 +50,14 @@ var data = [].concat(
 
 let triangles = []
 
-for (let j = 0; j < 1; j++) {
-    for (let i = 0; i < 1; i++) {
-        const triangle = new Node('Triangle' + i, root);
-        triangle.setMeshData(v, data);
-        triangle.toggleWireframe(true)
-        triangle.transform.translate([i, j, 0]);
+const width = 3;
+const height = 3;
+for (let j = 0; j < width; j++) {
+    for (let i = 0; i < height; i++) {
+        const cube = new GeometryNode('Cube ' + (j*width+i), root);
+        cube.setMeshDataNew(v, data);
+        // triangle.toggleWireframe(true)
+        cube.transform.translate([i*1.2, j*1.2, 0]);
     }
 }
 

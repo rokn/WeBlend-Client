@@ -1,5 +1,5 @@
 export class Modifiers {
-    constructor(shift, ctrl, alt, meta) {
+    constructor(shift=false, ctrl=false, alt=false, meta=false) {
         this.shift = shift;
         this.ctrl = ctrl;
         this.alt = alt;
@@ -14,11 +14,17 @@ export class Modifiers {
     }
 }
 
+export const NO_MOD = new Modifiers(false, false, false, false);
+export const SHIFT_MOD = new Modifiers(true, false, false, false);
+export const CTRL_MOD = new Modifiers(false, true, false, false);
+export const ALT_MOD = new Modifiers(false, false, true, false);
+
 export class Command {
-    constructor(name, callback) {
+    constructor(name, callback, modifiers) {
         this.name = name;
         this.callback = callback;
         this.tool = null;
+        this.modifiers = modifiers;
     }
 
     matches(event) {
@@ -40,15 +46,14 @@ export const MOUSEB_SCROLL = 1;
 export const MOUSEB_SECONDARY = 2;
 export class MouseCommand extends Command {
     constructor(eventType, button, name, callback, modifiers = null) {
-        super(name, callback);
+        super(name, callback, modifiers);
         this.eventType = eventType;
         this.button = button;
-        this.modifiers = modifiers;
     }
 
     matches(event) {
         if (event.eventType === this.eventType && (!this.modifiers || this.modifiers.matches(event.modifiers))) {
-            if(!this.button || this.button === event.button) {
+            if(this.button === null || this.button === event.button) {
                 return true;
             }
         }
@@ -59,11 +64,10 @@ export class MouseCommand extends Command {
 export const KEY_DOWN = 0;
 export const KEY_UP = 1;
 export class KeyCommand extends Command {
-    constructor(eventType, code, name, callback, modifiers = null ) {
-        super(name, callback);
+    constructor(eventType, code, name, callback, modifiers = null) {
+        super(name, callback, modifiers);
         this.eventType = eventType;
         this.code = code;
-        this.modifiers = modifiers;
     }
 
     matches(event) {
@@ -72,6 +76,7 @@ export class KeyCommand extends Command {
                 return true;
             }
         }
+
         return super.matches(event);
     }
 }
@@ -112,6 +117,7 @@ export class Tool {
             if (command.matches(event)) {
                 command.activate(event);
                 event.consume();
+                break;
             }
         }
     }
