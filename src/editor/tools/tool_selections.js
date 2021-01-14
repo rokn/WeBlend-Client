@@ -1,18 +1,20 @@
-import {Tool} from "./tool.js";
+import {Action} from "./tool.js";
 import {STORE_SELECTED_OBJECTS} from "../";
 import {Ray} from "../../scene";
 import {traverseNodesDFS} from "../object_utils.js";
 import {vec3} from "../../../lib/gl-matrix";
 
 
-export class SelectObjectTool extends Tool{
+export class SelectObjectAction extends Action {
     constructor() {
-        super("Select Object Tool");
+        super("Select Object");
     }
 
-    activate(event, onDeactivate) {
-        super.activate(event, onDeactivate);
-
+    onActivate(event) {
+        let prevSelected = event.store.getArray(STORE_SELECTED_OBJECTS);
+        for (let node of prevSelected) {
+            node.unselect();
+        }
         event.store.clear(STORE_SELECTED_OBJECTS);
 
         let selected = null;
@@ -41,9 +43,7 @@ export class SelectObjectTool extends Tool{
 
         if (selected) {
             event.store.getArray(STORE_SELECTED_OBJECTS).push(selected)
-            console.log(event.store.getArray(STORE_SELECTED_OBJECTS))
+            selected.select();
         }
-
-        this.deactivate();
     }
 }

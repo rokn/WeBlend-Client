@@ -1,26 +1,35 @@
-import { hexToRgb } from '../utils.js'
-import { mat4 } from '../../lib/gl-matrix'
+import {hexToRgb} from '../utils.js'
+import {mat4, vec3} from '../../lib/gl-matrix'
 import {
-    CameraOrbitTool,
+    ALT_MOD,
+    CameraOrbitTool, CTRL_MOD,
     KEY_DOWN,
-    KEY_UP,
+    KEY_UP, KeyCommand,
     Modifiers,
     MOUSE_DOWN,
     MOUSE_MOVE,
     MOUSE_SCROLL,
-    MOUSE_UP, MOUSEB_PRIMARY,
+    MOUSE_UP,
+    MOUSEB_PRIMARY,
     MOUSEB_SCROLL,
-    MouseCommand, NO_MOD,
-    PanTool, SelectObjectTool, SHIFT_MOD,
-    ToolChooser, ZoomTool
-} from './tools'
-import { CameraControl } from './camera_control.js'
+    MouseCommand,
+    NO_MOD,
+    PanTool,
+    SelectObjectAction,
+    SHIFT_MOD,
+    ToolChooser, ZoomInAction, ZoomOutAction,
+    ZoomTool,
+} from "./tools"
+import {CameraControl} from './camera_control.js'
 import {Store} from "./store.js";
+import { vShader as vShader, outlineVShader } from './shaders.vert.js';
+import { fShader as fShader, outlineFShader } from './shaders.frag.js';
 
 
 export class Viewport {
     constructor(canvasId) {
         const canvas = document.getElementById(canvasId);
+        canvas.focus();
         if (!canvas) {
             console.error("canvas with id=\""+canvasId+"\", not found!");
             return null;
@@ -47,6 +56,7 @@ export class Viewport {
         this._setUpAxisLines();
         this._setupTools();
         this._setupEvents(canvas);
+        this._setupPrograms();
     }
 
     get cameraControl() {
@@ -124,20 +134,39 @@ export class Viewport {
     setCamera(camera) {
         camera.gl = this.gl;
         this.cameraControl.setCamera(camera);
+
+        this.useProgram(this.defaultProgram);
+        this.cameraControl.updateProjectionMatrix();
+
+        this.useProgram(this.outlineProgram);
+        this.cameraControl.updateProjectionMatrix();
     }
 
     draw() {
         const gl = this.gl;
-        this.cameraControl.updateViewMatrix()
 
         gl.enable(gl.DEPTH_TEST);
+        gl.enable(gl.CULL_FACE);
         gl.clearColor(...hexToRgb('#686868'));
         gl.clear(gl.COLOR_BUFFER_BIT+gl.DEPTH_BUFFER_BIT);
 
         this._drawAxisLines();
 
         if (this.root) {
-            this.root.draw(gl)
+            let options = {
+                drawOutline: true
+            };
+
+            gl.cullFace(gl.FRONT);
+            this.useProgram(this.outlineProgram);
+            this.cameraControl.updateViewMatrix()
+            this.root.draw(options)
+
+            options.drawOutline = false;
+            gl.cullFace(gl.BACK);
+            this.useProgram(this.defaultProgram);
+            this.cameraControl.updateViewMatrix()
+            this.root.draw(options)
         }
     }
 
@@ -147,6 +176,14 @@ export class Viewport {
 
         this.gl.getParamLocation = function(name) {
             return viewport.programVariables[name];
+        }
+
+        this.gl.useDefaultProgram = function() {
+            viewport.useProgram(viewport.defaultProgram);
+        }
+
+        this.gl.useOutlineProgram = function() {
+            viewport.useProgram(viewport.outlineProgram);
         }
     }
 
@@ -176,6 +213,7 @@ export class Viewport {
 
     _drawAxisLines() {
         const gl = this.gl;
+        gl.useDefaultProgram();
         const uModelMatrix = gl.getParamLocation('uModelMatrix');
         gl.uniformMatrix4fv(uModelMatrix,false, mat4.create());
 
@@ -212,14 +250,26 @@ export class Viewport {
     _setupTools() {
         let toolCommands = [];
 
+        const panTool = new PanTool();
         toolCommands.push({
             command: new MouseCommand(MOUSE_DOWN, MOUSEB_SCROLL, null, null, SHIFT_MOD),
-            tool: new PanTool(),
+            tool: panTool
         });
 
         toolCommands.push({
+            command: new MouseCommand(MOUSE_DOWN, MOUSEB_PRIMARY, null, null, ALT_MOD),
+            tool: panTool
+        });
+
+        const cameraOrbitTool = new CameraOrbitTool();
+        toolCommands.push({
             command: new MouseCommand(MOUSE_DOWN, MOUSEB_SCROLL, null, null, NO_MOD),
-            tool: new CameraOrbitTool(),
+            tool: cameraOrbitTool,
+        });
+
+        toolCommands.push({
+            command: new MouseCommand(MOUSE_DOWN, MOUSEB_PRIMARY, null, null, CTRL_MOD),
+            tool: cameraOrbitTool,
         });
 
         toolCommands.push({
@@ -228,8 +278,18 @@ export class Viewport {
         });
 
         toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'NumpadAdd', null, null, NO_MOD),
+            tool: new ZoomInAction(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'NumpadSubtract', null, null, NO_MOD),
+            tool: new ZoomOutAction(),
+        });
+
+        toolCommands.push({
             command: new MouseCommand(MOUSE_DOWN, MOUSEB_PRIMARY, null, null, null),
-            tool: new SelectObjectTool(),
+            tool: new SelectObjectAction(),
         });
 
         this.mainTool = new ToolChooser(toolCommands);
@@ -287,5 +347,25 @@ export class Viewport {
 
         addKeyEvent('keydown');
         addKeyEvent('keyup');
+    }
+
+    _setupPrograms() {
+        const gl = this.gl;
+        this.defaultProgram = this.createProgram(vShader, fShader);
+
+        const uAmbientColor = gl.getParamLocation('uAmbientColor');
+        const uDiffuseColor = gl.getParamLocation('uDiffuseColor');
+        const uLightDir = gl.getParamLocation('uLightDir');
+        gl.uniform3fv(uAmbientColor,[0.3,0.3,0.3]);
+        gl.uniform3fv(uDiffuseColor,[1,1,1]);
+        gl.uniform3fv(uLightDir, [0,0,-1]);
+
+        this.outlineProgram = this.createProgram(outlineVShader, outlineFShader);
+
+        const outlineColor = gl.getParamLocation('outlineColor');
+        const outlineScale = gl.getParamLocation('outlineScale');
+        gl.uniform3fv(outlineColor, [0.99, 0.73, 0.01]);
+        const scale = 1.03;
+        gl.uniformMatrix4fv(outlineScale, false, mat4.fromScaling(mat4.create(), vec3.fromValues(scale, scale, scale)));
     }
 }

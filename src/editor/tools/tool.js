@@ -122,3 +122,22 @@ export class Tool {
         }
     }
 }
+
+export class Action extends Tool {
+    constructor(name) {
+        super(name);
+    }
+
+    activate(event, onDeactivate) {
+        super.activate(event, onDeactivate);
+
+        // Activate subclass
+        this.onActivate(event);
+
+        this.deactivate();
+    }
+
+    onActivate(event) {
+        // nop
+    }
+}

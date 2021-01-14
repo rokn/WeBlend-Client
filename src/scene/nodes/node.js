@@ -18,6 +18,8 @@ export class Node {
         this.props = {};
         this.origin = vec3.fromValues(0,0,0);
 
+        this._selected = false;
+
         if (this.parent) {
             this.parent.addChild(this)
         }
@@ -35,9 +37,21 @@ export class Node {
         return this._nodeMatrix;
     }
 
+    get selected() {
+        return this._selected;
+    }
+
     getAABB() {
         //TODO: Return small AABB around position
         return null;
+    }
+
+    select() {
+        this._selected = true;
+    }
+
+    unselect() {
+        this._selected = false;
     }
 
     addChild(childNode) {
@@ -45,9 +59,9 @@ export class Node {
         childNode.gl = this.gl;
     }
 
-    draw() {
+    draw(options) {
         for (let i = 0; i < this.children.length; i++) {
-            this.children[i].draw();
+            this.children[i].draw(options);
         }
     }
 

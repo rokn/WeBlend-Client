@@ -10,11 +10,6 @@ export class CameraControl {
 
     setCamera(camera) {
         this.viewportCamera = camera;
-
-        const uProjectionMatrix = this.gl.getParamLocation('uProjectionMatrix');
-        this.gl.uniformMatrix4fv(uProjectionMatrix,false, this.viewportCamera.getPerspectiveMatrix());
-
-        this.updateViewMatrix();
     }
 
     get camera() {
@@ -95,5 +90,10 @@ export class CameraControl {
     updateViewMatrix() {
         const uViewMatrix = this.gl.getParamLocation('uViewMatrix');
         this.gl.uniformMatrix4fv(uViewMatrix,false, this.viewportCamera.getViewMatrix());
+    }
+
+    updateProjectionMatrix() {
+        const uProjectionMatrix = this.gl.getParamLocation('uProjectionMatrix');
+        this.gl.uniformMatrix4fv(uProjectionMatrix,false, this.viewportCamera.getPerspectiveMatrix());
     }
 }

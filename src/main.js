@@ -1,11 +1,8 @@
-import { vShader as vShader } from './shaders.vert.js';
-import { fShader as fShader } from './shaders.frag.js';
 import { Viewport } from './editor'
 import { Node, Camera } from './scene'
 import {GeometryNode} from "./scene/nodes";
 
 const viewport = new Viewport('mainCanvas')
-viewport.createProgram(vShader, fShader);
 
 const root = new Node('__root', null);
 viewport.setRoot(root);
@@ -14,13 +11,6 @@ const camera = new Camera('Viewport Camera', [0,-5,8], [0,0,0], [0,0,1], null);
 camera.setAsPerspective(30, viewport.width, viewport.height, 0.1, 40000);
 camera.transform.setRotation([0,0,180]);
 viewport.setCamera(camera);
-
-const uAmbientColor = viewport.gl.getParamLocation('uAmbientColor');
-const uDiffuseColor = viewport.gl.getParamLocation('uDiffuseColor');
-const uLightDir = viewport.gl.getParamLocation('uLightDir');
-viewport.gl.uniform3fv(uAmbientColor,[0.3,0.3,0.3]);
-viewport.gl.uniform3fv(uDiffuseColor,[1,1,1]);
-viewport.gl.uniform3fv(uLightDir, [0,0,-1]);
 
 const v = [
     +0.5,-0.5,-0.5,
@@ -50,8 +40,8 @@ var data = [].concat(
 
 let triangles = []
 
-const width = 3;
-const height = 3;
+const width = 6;
+const height = 6;
 for (let j = 0; j < width; j++) {
     for (let i = 0; i < height; i++) {
         const cube = new GeometryNode('Cube ' + (j*width+i), root);

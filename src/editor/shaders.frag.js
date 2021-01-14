@@ -9,6 +9,15 @@ export const fShader = `
 `
 
 // language=GLSL
+export const outlineFShader = `
+    precision mediump float;
+    uniform vec3 outlineColor;
+    void main() {
+        gl_FragColor = vec4(outlineColor, 1);
+    }
+`
+
+// language=GLSL
 export const simpFShader = `
     precision mediump float;
     void main( )
