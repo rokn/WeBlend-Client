@@ -17,3 +17,17 @@ body {
 #mainCanvas:focus {
     outline:none;
 }
+
+#mainGrid {
+    display: grid;
+    grid-template-columns: 300px 800px;
+}
+
+#selected-view {
+    margin: 0px auto;
+    display: block;
+}
+
+.ui-vx, .ui-vy, .ui-vz {
+    width: 50px;
+}

@@ -14,7 +14,7 @@ import {
     MOUSEB_SCROLL,
     MouseCommand,
     NO_MOD,
-    PanTool, RotateTool,
+    PanTool, RotateTool, ScaleTool,
     SelectObjectAction,
     SHIFT_MOD,
     ToolChooser, ZoomInAction, ZoomOutAction,
@@ -304,6 +304,11 @@ export class Viewport {
         toolCommands.push({
             command: new KeyCommand(KEY_DOWN, 'KeyR', null, null, null),
             tool: new RotateTool(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'KeyS', null, null, null),
+            tool: new ScaleTool(),
         });
 
         this.mainTool = new ToolChooser(toolCommands);
