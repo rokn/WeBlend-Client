@@ -1,8 +1,8 @@
 import {hexToRgb} from '../utils.js'
-import {mat4, vec3} from '../../lib/gl-matrix'
+import {mat4, vec3, vec2} from '../../lib/gl-matrix'
 import {
     ALT_MOD,
-    CameraOrbitTool, CTRL_MOD,
+    CameraOrbitTool, CTRL_MOD, FocusAction, GrabTool,
     KEY_DOWN,
     KEY_UP, KeyCommand,
     Modifiers,
@@ -14,7 +14,7 @@ import {
     MOUSEB_SCROLL,
     MouseCommand,
     NO_MOD,
-    PanTool,
+    PanTool, RotateTool,
     SelectObjectAction,
     SHIFT_MOD,
     ToolChooser, ZoomInAction, ZoomOutAction,
@@ -70,7 +70,6 @@ export class Viewport {
     get store() {
         return this._store;
     }
-
 
     _compileShader(code, type) {
         const gl = this.gl;
@@ -292,16 +291,34 @@ export class Viewport {
             tool: new SelectObjectAction(),
         });
 
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'KeyG', null, null, null),
+            tool: new GrabTool(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'KeyF', null, null, null),
+            tool: new FocusAction(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'KeyR', null, null, null),
+            tool: new RotateTool(),
+        });
+
         this.mainTool = new ToolChooser(toolCommands);
     }
 
     _setupEvents(canvas) {
+        this.lastMousePosition = vec2.create();
+
         const handleEvent = (event) => {
             event.viewport = this;
             event.store = this.store; // For easier access
             event.sceneRoot = this.root; // For easier access
             event.modifiers = new Modifiers(event.shiftKey, event.ctrlKey, event.altKey, event.metaKey);
             event.consume =  event.preventDefault;
+            event.mousePosition = this.lastMousePosition;
             this.mainTool.handleEvent(event);
         };
 
@@ -314,6 +331,8 @@ export class Viewport {
                         break;
                     case 'mousemove':
                         event.eventType = MOUSE_MOVE;
+                        this.lastMousePosition.x = event.offsetX;
+                        this.lastMousePosition.y = event.offsetY;
                         break;
                     case 'mouseup':
                         event.eventType = MOUSE_UP;

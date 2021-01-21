@@ -1,4 +1,5 @@
 import {DeactivateCommand, MOUSE_MOVE, MOUSE_UP, MOUSEB_SCROLL, MouseCommand, Tool} from "./tool.js";
+import {vec2} from '../../../lib/gl-matrix';
 
 
 export class CameraOrbitTool extends Tool{
@@ -11,18 +12,16 @@ export class CameraOrbitTool extends Tool{
 
         this.startXRot = 0;
         this.startZRot = 0;
-        this.dragX = 0;
-        this.dragY = 0;
+        this.dragPos = null;
     }
 
     handleMove(event) {
         const camera = event.viewport.cameraControl.camera;
 
-        const diffX = event.offsetX - this.dragX;
-        const diffY = event.offsetY - this.dragY;
+        const diff = vec2.sub(vec2.create(), event.mousePosition, this.dragPos);
 
-        const newXRot = this.startXRot - diffY / 3;
-        const newZRot = this.startZRot + diffX / 3;
+        const newXRot = this.startXRot - diff.y / 3;
+        const newZRot = this.startZRot + diff.x / 3;
         camera.transform.setRotation([newXRot, 0, newZRot]);
     }
 
@@ -30,11 +29,10 @@ export class CameraOrbitTool extends Tool{
         super.activate(event, onDeactivate);
 
         const camera = event.viewport.cameraControl.camera;
-        this.dragX = event.offsetX;
-        this.dragY = event.offsetY;
+        this.dragPos = vec2.clone(event.mousePosition)
 
-        this.startXRot = camera.transform.rotation[0];
-        this.startZRot = camera.transform.rotation[2];
+        this.startXRot = camera.transform.rotation.x;
+        this.startZRot = camera.transform.rotation.z;
     }
 
     handleStop() {

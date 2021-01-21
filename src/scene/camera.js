@@ -120,6 +120,21 @@ export class Camera extends Node {
         return dest;
     }
 
+    getLocalAxis() {
+        const axis = [
+            vec3.create(),
+            vec3.create(),
+            this.front
+        ];
+
+        vec3.cross(axis[0], this.front, this.up);
+        vec3.cross(axis[1], axis[0], this.front);
+        vec3.normalize(axis[0], axis[0]);
+        vec3.normalize(axis[1], axis[1]);
+
+        return axis;
+    }
+
     _updateViewMatrix() {
         mat4.lookAt(this.viewMatrix, this.transform.position, this.props.target, this.props.up)
     }

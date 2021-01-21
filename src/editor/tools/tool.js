@@ -82,8 +82,9 @@ export class KeyCommand extends Command {
 }
 
 export class DeactivateCommand extends KeyCommand {
-    constructor() {
-        super(KEY_DOWN, 'Escape', 'deactivate', (_) => {
+    constructor(cb = null) {
+        super(KEY_DOWN, 'Escape', 'deactivate', (ev) => {
+            cb(ev)
             this.tool.deactivate()
         });
     }

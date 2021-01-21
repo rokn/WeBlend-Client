@@ -1,1 +1,1 @@
-export const STORE_SELECTED_OBJECTS = 'store-selected-objects';
+export const STORE_SELECTED_NODES = 'store-selected-objects';

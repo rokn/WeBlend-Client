@@ -1,6 +1,8 @@
+import './gl-matrix-extends.js'
 import { Viewport } from './editor'
 import { Node, Camera } from './scene'
 import {GeometryNode} from "./scene/nodes";
+import {App} from "./ui";
 
 const viewport = new Viewport('mainCanvas')
 
@@ -11,6 +13,8 @@ const camera = new Camera('Viewport Camera', [0,-5,8], [0,0,0], [0,0,1], null);
 camera.setAsPerspective(30, viewport.width, viewport.height, 0.1, 40000);
 camera.transform.setRotation([0,0,180]);
 viewport.setCamera(camera);
+
+const app = new App(viewport.store);
 
 const v = [
     +0.5,-0.5,-0.5,
@@ -38,8 +42,6 @@ var data = [].concat(
     1,3,2,
 );
 
-let triangles = []
-
 const width = 6;
 const height = 6;
 for (let j = 0; j < width; j++) {
@@ -51,20 +53,7 @@ for (let j = 0; j < width; j++) {
     }
 }
 
-// triangle.transform.setOrigin([-0.5, -0.5, 0])
-
-let time = now();
-function now() { return (new Date()).getTime()/1000; }
-
 function drawFrame() {
-    time = now();
-    // triangle.transform.setPosition([Math.sin(time), 0, 0])
-    // triangle.transform.setRotation([0, time*0, 1*180*Math.sin(time)])
-    // triangle.transform.setScale([1, 1+Math.sin(time), 1])
-    // camera.transform.setPosition([8*Math.cos(time),8*Math.sin(time),5]);
-    // viewport.gl.uniformMatrix4fv(uViewMatrix,false, camera.getViewMatrix());
-    // camera.setDistance(10+5*Math.sin(time));
-    // camera.transform.setRotation([180*Math.cos(time),0, 45+0*90*Math.sin(time)])
     viewport.draw();
     requestAnimationFrame(drawFrame);
 }

@@ -1,5 +1,5 @@
 import {Action} from "./tool.js";
-import {STORE_SELECTED_OBJECTS} from "../";
+import {STORE_SELECTED_NODES} from "../";
 import {Ray} from "../../scene";
 import {traverseNodesDFS} from "../object_utils.js";
 import {vec3} from "../../../lib/gl-matrix";
@@ -11,15 +11,18 @@ export class SelectObjectAction extends Action {
     }
 
     onActivate(event) {
-        let prevSelected = event.store.getArray(STORE_SELECTED_OBJECTS);
-        for (let node of prevSelected) {
-            node.unselect();
+        if (!event.modifiers.shift) {
+            let prevSelected = event.store.getArray(STORE_SELECTED_NODES);
+            for (let node of prevSelected) {
+                node.unselect();
+            }
+            event.store.clear(STORE_SELECTED_NODES);
         }
-        event.store.clear(STORE_SELECTED_OBJECTS);
 
         let selected = null;
         let minT = Number.MAX_VALUE;
         let viewportCamera = event.viewport.cameraControl.camera;
+
         traverseNodesDFS(event.sceneRoot, node => {
             const aabb = node.getAABB();
             if (aabb === null) {
@@ -42,7 +45,8 @@ export class SelectObjectAction extends Action {
         });
 
         if (selected) {
-            event.store.getArray(STORE_SELECTED_OBJECTS).push(selected)
+            event.store.getArray(STORE_SELECTED_NODES).push(selected);
+            event.store.update(STORE_SELECTED_NODES);
             selected.select();
         }
     }

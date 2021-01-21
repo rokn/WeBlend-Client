@@ -1,5 +1,5 @@
 import {DeactivateCommand, MOUSE_MOVE, MOUSE_UP, MOUSEB_SCROLL, MouseCommand, Tool} from "./tool.js";
-import {vec3} from '../../../lib/gl-matrix';
+import {vec3,vec2} from '../../../lib/gl-matrix';
 
 
 export class PanTool extends Tool{
@@ -11,22 +11,19 @@ export class PanTool extends Tool{
         this.addCommand(new DeactivateCommand());
 
         this.startPos = null;
-        this.camLocalX = vec3.create();
-        this.camLocalY = vec3.create();
-        this.dragX = 0;
-        this.dragY = 0;
+        this.camLocal = null;
+        this.dragPos = null;
     }
 
     handleMove(event) {
         const camera = event.viewport.cameraControl.camera;
         const dist = camera.distance;
 
-        const diffX = event.offsetX - this.dragX;
-        const diffY = event.offsetY - this.dragY;
+        const diff = vec2.sub(vec2.create(), event.mousePosition, this.dragPos);
 
         let newPos = vec3.clone(this.startPos);
-        vec3.add(newPos, newPos, vec3.scale(vec3.create(), this.camLocalX, dist*(-diffX)/1300));
-        vec3.add(newPos, newPos, vec3.scale(vec3.create(), this.camLocalY, dist*diffY/1300));
+        vec3.add(newPos, newPos, vec3.scale(vec3.create(), this.camLocal[0], dist*(-diff.x)/1300));
+        vec3.add(newPos, newPos, vec3.scale(vec3.create(), this.camLocal[1], dist*diff.y/1300));
 
         camera.setTarget(newPos);
     }
@@ -34,15 +31,11 @@ export class PanTool extends Tool{
     activate(event, onDeactivate) {
         super.activate(event, onDeactivate);
 
-        this.dragX = event.offsetX;
-        this.dragY = event.offsetY;
+        this.dragPos = vec2.clone(event.mousePosition)
 
         const camera = event.viewport.cameraControl.camera;
         this.startPos = vec3.clone(camera.target);
-        vec3.cross(this.camLocalX, camera.front, camera.up)
-        vec3.cross(this.camLocalY, this.camLocalX, camera.front)
-        vec3.normalize(this.camLocalX, this.camLocalX);
-        vec3.normalize(this.camLocalY, this.camLocalY);
+        this.camLocal = camera.getLocalAxis();
     }
 
     handleStop() {
