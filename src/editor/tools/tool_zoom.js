@@ -1,7 +1,7 @@
-import {Tool} from "./tool.js";
+import {Tool} from 'editor/tools/tool';
 
 
-export class ZoomTool extends Tool{
+export class ZoomTool extends Tool {
     constructor() {
         super("Zoom Tool");
     }

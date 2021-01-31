@@ -1,5 +1,5 @@
-import {DeactivateCommand, MOUSE_MOVE, MOUSE_UP, MOUSEB_SCROLL, MouseCommand, Tool} from "./tool.js";
-import {vec3,vec2} from '../../../lib/gl-matrix';
+import {DeactivateCommand, MOUSE_MOVE, MOUSE_UP, MOUSEB_SCROLL, MouseCommand, Tool} from 'editor/tools/tool';
+import {vec3,vec2} from 'gl-matrix';
 
 
 export class PanTool extends Tool{

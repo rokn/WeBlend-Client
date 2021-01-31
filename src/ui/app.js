@@ -1,4 +1,4 @@
-import {SelectedView} from "./selected_view.js";
+import {SelectedView} from './selected_view.js';
 
 export class App {
     constructor(store) {

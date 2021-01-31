@@ -1,8 +1,10 @@
-import './gl-matrix-extends.js'
-import { Viewport } from './editor'
-import { Node, Camera } from './scene'
-import {GeometryNode} from "./scene/nodes";
-import {App} from "./ui";
+import 'gl-matrix-extends'
+import { Viewport } from 'editor'
+import { Node, Camera } from 'scene'
+import {GeometryNode} from 'scene/nodes';
+import {App} from 'ui';
+
+import './css/main.css'
 
 const viewport = new Viewport('mainCanvas')
 

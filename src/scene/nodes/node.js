@@ -1,5 +1,5 @@
-import { Transform } from '../transform.js';
-import { mat4, vec3 } from "../../../lib/gl-matrix";
+import { Transform } from 'scene';
+import { mat4, vec3 } from 'gl-matrix';
 
 let ID_COUNTER = 0;
 
@@ -13,7 +13,7 @@ export class Node {
 
         this.id = ID_COUNTER++;
 
-        this.gl = undefined;
+        this.store = null;
         this.parent = parent;
         this.props = {};
         this.origin = vec3.fromValues(0,0,0);
@@ -56,7 +56,7 @@ export class Node {
 
     addChild(childNode) {
         this.children.push(childNode);
-        childNode.gl = this.gl;
+        childNode.store = this.store;
     }
 
     draw(options) {

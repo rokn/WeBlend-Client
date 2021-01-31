@@ -7,9 +7,9 @@ import {
     MOUSEB_PRIMARY,
     MouseCommand,
     Tool
-} from "./tool.js";
-import {vec2, vec3} from '../../../lib/gl-matrix';
-import {STORE_SELECTED_NODES} from "../const.js";
+} from 'editor/tools/tool';
+import {vec2, vec3} from 'gl-matrix';
+import {STORE_SELECTED_NODES} from 'scene/const';
 
 
 export class GrabTool extends Tool {

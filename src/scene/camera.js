@@ -1,6 +1,6 @@
-import {Node} from './nodes/node.js';
-import {mat4, vec3, vec4} from '../../lib/gl-matrix'
-import {radians, clamp} from '../utils.js';
+import {Node} from 'scene/nodes';
+import {mat4, vec3, vec4} from 'gl-matrix';
+import {radians, clamp} from 'utils';
 
 
 export class Camera extends Node {

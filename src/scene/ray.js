@@ -1,5 +1,5 @@
-import {vec3} from '../../lib/gl-matrix';
-import {min, max} from '../utils.js';
+import {vec3} from 'gl-matrix';
+import {min, max} from 'utils';
 
 export class HitResult {
     constructor(hit, t) {

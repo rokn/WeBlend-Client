@@ -1,4 +1,4 @@
-import { vec3 } from "../../lib/gl-matrix";
+import { vec3 } from 'gl-matrix';
 
 export class AABB {
     constructor(minPoint, maxPoint) {

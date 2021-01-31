@@ -1,5 +1,5 @@
-import {DeactivateCommand, MOUSE_MOVE, MOUSE_UP, MOUSEB_SCROLL, MouseCommand, Tool} from "./tool.js";
-import {vec2} from '../../../lib/gl-matrix';
+import {DeactivateCommand, MOUSE_MOVE, MOUSE_UP, MOUSEB_SCROLL, MouseCommand, Tool} from 'editor/tools/tool';
+import {vec2} from 'gl-matrix';
 
 
 export class CameraOrbitTool extends Tool{

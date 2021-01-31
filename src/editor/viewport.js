@@ -1,5 +1,5 @@
-import {hexToRgb} from '../utils.js'
-import {mat4, vec3, vec2} from '../../lib/gl-matrix'
+import {hexToRgb} from 'utils';
+import {mat4, vec3, vec2} from 'gl-matrix';
 import {
     ALT_MOD,
     CameraOrbitTool, CTRL_MOD, FocusAction, GrabTool,
@@ -19,11 +19,12 @@ import {
     SHIFT_MOD,
     ToolChooser, ZoomInAction, ZoomOutAction,
     ZoomTool,
-} from "./tools"
-import {CameraControl} from './camera_control.js'
-import {Store} from "./store.js";
+} from 'editor/tools';
+import {CameraControl} from 'editor/camera_control'
+import {Store} from 'scene/store';
 import { vShader as vShader, outlineVShader } from './shaders.vert.js';
 import { fShader as fShader, outlineFShader } from './shaders.frag.js';
+import {STORE_GL} from 'scene/const';
 
 
 export class Viewport {
@@ -49,6 +50,7 @@ export class Viewport {
 
         this._cameraControl = new CameraControl(canvas, this.gl);
         this._store = new Store();
+        this._store.set(STORE_GL, this.gl);
 
         this._root = null;
         this.width = canvas.width;
@@ -127,11 +129,11 @@ export class Viewport {
 
     setRoot(newRoot) {
         this._root = newRoot;
-        this._root.gl = this.gl;
+        this._root.store = this.store;
     }
 
     setCamera(camera) {
-        camera.gl = this.gl;
+        camera.store = this.store;
         this.cameraControl.setCamera(camera);
 
         this.useProgram(this.defaultProgram);

@@ -1,4 +1,4 @@
-import {vec3,mat4,quat} from '../../lib/gl-matrix';
+import {vec3,mat4,quat} from 'gl-matrix';
 
 export class Transform {
     constructor(position = [0,0,0],

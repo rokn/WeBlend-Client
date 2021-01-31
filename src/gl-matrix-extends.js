@@ -1,4 +1,4 @@
-import {glMatrix} from '../lib/gl-matrix'
+import {glMatrix} from 'gl-matrix';
 
 Object.defineProperties(glMatrix.ARRAY_TYPE.prototype, {
     'x': {

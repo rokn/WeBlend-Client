@@ -1,6 +1,6 @@
-import {calculateNormal, max, min} from "../utils.js";
-import {AABB} from "./aabb.js";
-import {vec3} from "../../lib/gl-matrix"
+import {calculateNormal, max, min} from 'utils';
+import {AABB} from 'scene/aabb';
+import {vec3} from 'gl-matrix'
 
 export class MeshData {
     constructor (gl, vertices, indices) {
@@ -17,6 +17,17 @@ export class MeshData {
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this._verticesBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.DYNAMIC_DRAW);
+
+        this.refCount = 0;
+    }
+
+    addUser() {
+        this.refCount++;
+    }
+
+    removeUser() {
+        //TODO: Cleanup
+        this.refCount--;
     }
 
     get geometryBuffer() {
@@ -74,4 +85,29 @@ export class MeshData {
 
         return new AABB(minPoint, maxPoint);
     }
+
+    static createMeshData(...meshDataArgs) {
+        const newMeshData = new MeshData(...meshDataArgs);
+        return new MeshDataLink(newMeshData);
+    }
 }
+
+export class MeshDataLink {
+    constructor(meshData) {
+        if (meshData instanceof MeshDataLink) {
+            this._instance = meshData.instance;
+        } else if (meshData instanceof MeshData) {
+            this._instance = meshData;
+        }
+        this._instance.addUser();
+    }
+
+    get instance() {
+        return this._instance;
+    }
+
+    destroy() {
+        this._instance.removeUser();
+    }
+}
+

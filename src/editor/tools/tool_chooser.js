@@ -1,4 +1,4 @@
-import {Tool} from "./tool.js";
+import {Tool} from './tool.js';
 
 export class ToolChooser extends Tool {
     constructor(toolCommands) {

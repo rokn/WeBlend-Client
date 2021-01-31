@@ -1,10 +1,9 @@
-import {STORE_SELECTED_NODES} from "../editor";
+import {STORE_SELECTED_NODES} from 'scene';
+import rivets from 'rivets'
 
-export class SelectedView extends Seemple {
+export class SelectedView {
     constructor(store, container) {
-        super();
-
-        this.bindNode('sandbox', container);
+        // this.bindNode('sandbox', container);
 
         this.store = store;
 
@@ -15,23 +14,23 @@ export class SelectedView extends Seemple {
             this.handleSelectionUpdate(node);
         })
 
-        const bindVector = (id, key, updateFunc) => {
-            this[key] = this.select(id);
-            this.instantiate(key, VectorView);
-            this[key].on('modify', () => {
-                updateFunc(this[key].getData());
-            });
-        }
+        // const bindVector = (id, key, updateFunc) => {
+        //     this[key] = this.select(id);
+        //     this.instantiate(key, VectorView);
+        //     this[key].on('modify', () => {
+        //         updateFunc(this[key].getData());
+        //     });
+        // }
 
-        bindVector('#selected-position', 'positionView', data => {
-            this.changeSelectedNode(node => node.transform.setPosition(data))
-        });
-        bindVector('#selected-rotation', 'rotationView', data => {
-            this.changeSelectedNode(node => node.transform.setRotation(data))
-        });
-        bindVector('#selected-scale', 'scaleView', data => {
-            this.changeSelectedNode(node => node.transform.setScale(data))
-        });
+        // bindVector('#selected-position', 'positionView', data => {
+        //     this.changeSelectedNode(node => node.transform.setPosition(data))
+        // });
+        // bindVector('#selected-rotation', 'rotationView', data => {
+        //     this.changeSelectedNode(node => node.transform.setRotation(data))
+        // });
+        // bindVector('#selected-scale', 'scaleView', data => {
+        //     this.changeSelectedNode(node => node.transform.setScale(data))
+        // });
     }
 
     getSelectedNode() {
@@ -51,28 +50,27 @@ export class SelectedView extends Seemple {
     }
 
     handleSelectionUpdate(node) {
-        this.positionView.set(node.transform.position);
-        this.rotationView.set(node.transform.rotation);
-        this.scaleView.set(node.transform.scale);
+        // this.positionView.set(node.transform.position);
+        // this.rotationView.set(node.transform.rotation);
+        // this.scaleView.set(node.transform.scale);
     }
 }
 
-class VectorView extends Seemple.Object {
+class VectorView {
     constructor(container) {
-        super();
-        this.bindNode('sandbox', container);
-        this.addDataKeys(['x', 'y', 'z']);
-        this.bindNode('x', ':sandbox .ui-vx');
-        this.bindNode('y', ':sandbox .ui-vy');
-        this.bindNode('z', ':sandbox .ui-vz');
+        // this.bindNode('sandbox', container);
+        // this.addDataKeys(['x', 'y', 'z']);
+        // this.bindNode('x', ':sandbox .ui-vx');
+        // this.bindNode('y', ':sandbox .ui-vy');
+        // this.bindNode('z', ':sandbox .ui-vz');
     }
 
     set(vec) {
-        this.setData({
-            x: vec.x,
-            y: vec.y,
-            z: vec.z,
-        })
+        // this.setData({
+        //     x: vec.x,
+        //     y: vec.y,
+        //     z: vec.z,
+        // })
     }
 
     getData() {

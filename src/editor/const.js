@@ -1,1 +1,0 @@
-export const STORE_SELECTED_NODES = 'store-selected-objects';

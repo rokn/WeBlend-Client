@@ -1,6 +1,6 @@
-import {Action} from "./tool.js";
-import {STORE_SELECTED_NODES} from "../const.js";
-import {vec3} from "../../../lib/gl-matrix";
+import {Action} from './tool.js';
+import {STORE_SELECTED_NODES} from '../../scene/const.js';
+import {vec3} from 'gl-matrix';
 
 export class ZoomInAction extends Action {
     constructor() {

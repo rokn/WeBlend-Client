@@ -1,8 +1,8 @@
-import {Action} from "./tool.js";
-import {STORE_SELECTED_NODES} from "../";
-import {Ray} from "../../scene";
-import {traverseNodesDFS} from "../object_utils.js";
-import {vec3} from "../../../lib/gl-matrix";
+import {Action} from 'editor/tools/tool';
+import {STORE_SELECTED_NODES} from 'scene';
+import {Ray} from 'scene';
+import {traverseNodesDFS} from 'editor/object_utils';
+import {vec3} from 'gl-matrix';
 
 
 export class SelectObjectAction extends Action {
