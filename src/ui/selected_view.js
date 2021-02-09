@@ -1,79 +1,60 @@
 import {STORE_SELECTED_NODES} from 'scene';
-import rivets from 'rivets'
+// import rivets from 'rivets'
+import {vec3} from 'gl-matrix'
+
+import Vue from 'vue/dist/vue.esm.js'
 
 export class SelectedView {
     constructor(store, container) {
-        // this.bindNode('sandbox', container);
-
-        this.store = store;
+        // rivets.bind(container, this);
 
         store.observe(STORE_SELECTED_NODES, (_, selected) => {
-            const node = this.getSelectedNode();
-            if (!node) return;
+            if (selected === undefined || selected.length !== 1) {
+                this.clearFields();
+                return null;
+            }
 
-            this.handleSelectionUpdate(node);
+            this.handleSelectionUpdate(selected[0]);
         })
 
-        // const bindVector = (id, key, updateFunc) => {
-        //     this[key] = this.select(id);
-        //     this.instantiate(key, VectorView);
-        //     this[key].on('modify', () => {
-        //         updateFunc(this[key].getData());
-        //     });
-        // }
 
-        // bindVector('#selected-position', 'positionView', data => {
-        //     this.changeSelectedNode(node => node.transform.setPosition(data))
-        // });
-        // bindVector('#selected-rotation', 'rotationView', data => {
-        //     this.changeSelectedNode(node => node.transform.setRotation(data))
-        // });
-        // bindVector('#selected-scale', 'scaleView', data => {
-        //     this.changeSelectedNode(node => node.transform.setScale(data))
-        // });
-    }
+        this.clearFields();
 
-    getSelectedNode() {
-        const selected = this.store.getArray(STORE_SELECTED_NODES);
-
-        if (selected === undefined || selected.length > 1) {
-            return null;
-        }
-
-        return selected[0];
-    }
-
-    changeSelectedNode(cb) {
-        const node = this.getSelectedNode();
-        if (!node) return;
-        cb(node);
+        this.binding = new Vue({
+            el: container,
+            data: this,
+            watch: {
+                position: (newPosition, _) => {
+                    this.transform.setPosition(newPosition);
+                }
+            }
+        })
     }
 
     handleSelectionUpdate(node) {
-        // this.positionView.set(node.transform.position);
-        // this.rotationView.set(node.transform.rotation);
-        // this.scaleView.set(node.transform.scale);
-    }
-}
+        this.transform = node.transform;
 
-class VectorView {
-    constructor(container) {
-        // this.bindNode('sandbox', container);
-        // this.addDataKeys(['x', 'y', 'z']);
-        // this.bindNode('x', ':sandbox .ui-vx');
-        // this.bindNode('y', ':sandbox .ui-vy');
-        // this.bindNode('z', ':sandbox .ui-vz');
+        const updateFromTransform = (transform, key) => {
+            this[key] = vec3.clone(transform[key]);
+        }
+
+        this.position = vec3.clone(this.transform.position);
+        this.rotation = vec3.clone(this.transform.rotation);
+        this.scale = vec3.clone(this.transform.scale);
+
+        this.transform.subscribe(updateFromTransform)
     }
 
-    set(vec) {
-        // this.setData({
-        //     x: vec.x,
-        //     y: vec.y,
-        //     z: vec.z,
-        // })
+    updateModel(_, view) {
+        view.transform.setPosition(view.position);
+        view.transform.setRotation(view.rotation);
+        view.transform.setScale(view.scale);
     }
 
-    getData() {
-        return [this.x, this.y, this.z];
+    clearFields() {
+        this.transform = null;
+        this.position = null;
+        this.rotation = null;
+        this.scale = null;
     }
 }

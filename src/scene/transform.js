@@ -1,57 +1,43 @@
 import {vec3,mat4,quat} from 'gl-matrix';
+import {Observable} from 'scene/observable';
 
-export class Transform {
+export class Transform extends Observable {
     constructor(position = [0,0,0],
                 rotation = [0,0,0],
                 scale = [1,1,1],
                 origin=[0,0,0]) {
+        super();
         this.position = vec3.fromValues(...position);
         this.rotation = vec3.fromValues(...rotation.slice());
         this._rotation = quat.fromEuler(quat.create(), ...rotation);
         this.scale = vec3.fromValues(...scale);
         this.origin = vec3.fromValues(...origin);
-
-        this.onChangedObj = null;
-    }
-
-    onChanged(callbackObj) {
-        if (callbackObj.onTransformChanged === undefined) {
-            throw new Error('callbackObj didn\'t have onTransformChanged method');
-        }
-
-        this.onChangedObj = callbackObj;
-    }
-
-    _callOnChanged() {
-        if (this.onChangedObj) {
-            this.onChangedObj.onTransformChanged(this)
-        }
     }
 
     translate(amountVec) {
         vec3.add(this.position, this.position, vec3.fromValues(...amountVec));
-        this._callOnChanged();
+        this.notify('position');
     }
 
     setPosition(position) {
-        this.position = vec3.fromValues(...position);
-        this._callOnChanged();
+        vec3.set(this.position, ...position);
+        this.notify('position');
     }
 
     setRotation(rotation) {
-        this.rotation = vec3.fromValues(...rotation);
+        vec3.set(this.rotation, ...rotation);
         quat.fromEuler(this._rotation, ...rotation);
-        this._callOnChanged();
+        this.notify('rotation');
     }
 
     setScale(scale) {
-        this.scale = vec3.fromValues(...scale);
-        this._callOnChanged();
+        vec3.set(this.scale, ...scale);
+        this.notify('scale');
     }
 
     setOrigin(origin) {
         this.origin = vec3.fromValues(...origin);
-        this._callOnChanged();
+        this.notify('origin');
     }
 
     toNodeMatrix(modelMatrix) {

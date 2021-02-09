@@ -13,26 +13,26 @@
     </noscript>
 
     <div id="mainGrid">
-        <div id="selected-view">
-            <div id="selected-position">
-                <label>Position</label><br>
-                <input type="number" class="ui-vx">
-                <input type="number" class="ui-vy">
-                <input type="number" class="ui-vz">
-            </div>
-            <div id="selected-rotation">
-                <label>Rotation</label><br>
-                <input type="number" class="ui-vx">
-                <input type="number" class="ui-vy">
-                <input type="number" class="ui-vz">
-            </div>
-            <div id="selected-scale">
-                <label>Scale</label><br>
-                <input type="number" class="ui-vx">
-                <input type="number" class="ui-vy">
-                <input type="number" class="ui-vz">
-            </div>
-        </div>
+<!--        <div id="selected-view">-->
+<!--            <div id="selected-position">-->
+<!--                <label>Position</label><br>-->
+<!--                <input type="number" class="selected-number" v-if="position" v-model="position.x">-->
+<!--                <input type="number" class="selected-number">-->
+<!--                <input type="number" class="selected-number">-->
+<!--            </div>-->
+<!--            <div id="selected-rotation">-->
+<!--                <label>Rotation</label><br>-->
+<!--                <input type="number" class="selected-number" rv-value="selectedRotation.x">-->
+<!--                <input type="number" class="selected-number" rv-value="selectedRotation.y">-->
+<!--                <input type="number" class="selected-number" rv-value="selectedRotation.z">-->
+<!--            </div>-->
+<!--            <div id="selected-scale">-->
+<!--                <label>Scale</label><br>-->
+<!--                <input type="number" class="selected-number" rv-value="selectedScale.x">-->
+<!--                <input type="number" class="selected-number" rv-value="selectedScale.y">-->
+<!--                <input type="number" class="selected-number" rv-value="selectedScale.z">-->
+<!--            </div>-->
+<!--        </div>-->
 
         <div id="viewportWrapper">
             <canvas id="mainCanvas" width="1200" height="600" tabindex="0"></canvas>

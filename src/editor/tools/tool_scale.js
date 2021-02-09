@@ -67,7 +67,7 @@ export class ScaleTool extends Tool {
         this.startScales = [];
 
         for (const node of selected) {
-            this.startScales.push(node.transform.scale);
+            this.startScales.push(vec3.clone(node.transform.scale));
         }
 
         this.dragPos = vec2.clone(event.mousePosition)

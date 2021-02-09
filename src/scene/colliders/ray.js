@@ -37,4 +37,22 @@ export class Ray {
 
         return new HitResult(true, tmin);
     }
+
+    intersectSphere(sphere) {
+        const a = vec3.dot(this.dir, this.dir);
+        const centerDiff = vec3.sub(vec3.create(), this.from, sphere.center);
+        const b = 2 * vec3.dot(this.dir, centerDiff);
+        const c =
+            vec3.dot(sphere.center, sphere.center) +
+            vec3.dot(this.from, this.from) -
+            2 * vec3.dot(sphere.center, this.from) -
+            sphere.radius * sphere.radius;
+        const discriminant = b*b - 4 * a * c;
+        if (discriminant < 0) {
+            return new HitResult(false, 0);
+        }
+
+        const t = (-b - Math.sqrt(discriminant)) / (2 * a);
+        return new HitResult(true, t);
+    }
 }

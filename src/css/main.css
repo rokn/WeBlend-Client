@@ -28,6 +28,6 @@ body {
     display: block;
 }
 
-.ui-vx, .ui-vy, .ui-vz {
+.selected-number {
     width: 50px;
 }

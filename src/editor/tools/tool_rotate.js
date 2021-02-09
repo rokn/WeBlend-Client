@@ -65,7 +65,7 @@ export class RotateTool extends Tool {
         this.startRotations = [];
 
         for (const node of selected) {
-            this.startRotations.push(node.transform.rotation);
+            this.startRotations.push(vec3.clone(node.transform.rotation));
         }
 
         this.dragPos = vec2.clone(event.mousePosition)

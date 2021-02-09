@@ -4,6 +4,8 @@ export const vShader =`
 	uniform mat4 uViewMatrix;
 	uniform mat4 uModelMatrix;
     
+    uniform bool uNoLighting;
+    
 	uniform vec3 uAmbientColor;
 	uniform vec3 uDiffuseColor;
 	
@@ -17,15 +19,18 @@ export const vShader =`
 	
 	void main ()
 	{
-        gl_PointSize = 5.0;
+        gl_PointSize = 8.0;
 		mat4 mvMatrix = uViewMatrix * uModelMatrix;
 		gl_Position = uProjectionMatrix * mvMatrix * vec4(aXYZ,1);
         
-		vColor = uAmbientColor*aColor;
+        vColor = aColor;
 	
-		vec3 light = normalize(-uLightDir);
-		vec3 normal = vec3(normalize(mvMatrix*vec4(aNormal,0)));
-		vColor += aColor*uDiffuseColor*max(dot(normal,light),0.0);
+        if(!uNoLighting) {
+            vColor = uAmbientColor*aColor;
+            vec3 light = normalize(-uLightDir);
+            vec3 normal = vec3(normalize(mvMatrix*vec4(aNormal,0)));
+            vColor += aColor*uDiffuseColor*max(dot(normal,light),0.0);
+        }
 	}
 `
 

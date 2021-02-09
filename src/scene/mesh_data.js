@@ -1,24 +1,84 @@
-import {calculateNormal, max, min} from 'utils';
-import {AABB} from 'scene/aabb';
+import {calculateNormal, countSmaller, max, min} from 'utils';
+import {AABB} from 'scene';
 import {vec3} from 'gl-matrix'
+import {SELECTED_COLOR} from 'scene/const';
 
 export class MeshData {
     constructor (gl, vertices, indices) {
         this.vertices = vertices;
         this.indices = indices;
         this.color = [1, 0, 0]; // TODO: WTF NO
-        this._generateBuffer();
+        this._selectedVertices = new Set();
+        this._generateBuffers();
+        this.gl = gl;
 
         this._geomBuf = gl.createBuffer();
         this._verticesBuffer = gl.createBuffer();
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, this._geomBuf);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this._buffer), gl.DYNAMIC_DRAW);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, this._verticesBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.DYNAMIC_DRAW);
+        this._updateMainBuffer();
+        this._updateVerticesBuffer();
 
         this.refCount = 0;
+    }
+
+    _updateMainBuffer() {
+        const gl = this.gl;
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._geomBuf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this._buffer), gl.DYNAMIC_DRAW);
+    }
+
+    _updateVerticesBuffer() {
+        const gl = this.gl;
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._verticesBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this._vbuffer), gl.DYNAMIC_DRAW);
+    }
+
+    _setVertexColor(idx, color) {
+        this._vbuffer[idx*6+3] = color[0];
+        this._vbuffer[idx*6+4] = color[1];
+        this._vbuffer[idx*6+5] = color[2];
+    }
+
+    toggleVertexSelection(idx) {
+        if (this._selectedVertices.has(idx)) {
+            this._setVertexColor(idx, [0,0,0]);
+            this._selectedVertices.delete(idx);
+        } else {
+            this._setVertexColor(idx, SELECTED_COLOR);
+            this._selectedVertices.add(idx);
+        }
+        this._updateVerticesBuffer();
+    }
+
+    getSelectedVertices() {
+        return this._selectedVertices;
+    }
+
+    clearSelected() {
+        for (const idx of this._selectedVertices) {
+            this._setVertexColor(idx, [0,0,0]);
+        }
+
+        this._selectedVertices.clear();
+        this._updateVerticesBuffer();
+    }
+
+    isSelected(idx) {
+        return this._selectedVertices.has(idx);
+    }
+
+    batchUpdateVertices(newPositions) {
+        for (const [idx, position] of Object.entries(newPositions)) {
+            this.setVertex(idx, position, false);
+        }
+        this.updateBuffers();
+    }
+
+    updateBuffers() {
+        this._generateBuffers();
+        this._updateMainBuffer();
+        this._updateVerticesBuffer();
     }
 
     addUser() {
@@ -52,7 +112,128 @@ export class MeshData {
         return vec3.fromValues(verts[idx], verts[idx+1], verts[idx+2]);
     }
 
-    _generateBuffer() {
+    getFaceVertices(index) {
+        const idx = index*3;
+        return [
+            this.getVertex(this.indices[idx  ]),
+            this.getVertex(this.indices[idx+1]),
+            this.getVertex(this.indices[idx+2]),
+        ]
+    }
+
+    getFaceIndices(index) {
+        const idx = index*3;
+        return [
+            this.indices[idx  ],
+            this.indices[idx+1],
+            this.indices[idx+2],
+        ]
+    }
+
+    deleteVertices(indicesToDelete) {
+        const indices = new Set(indicesToDelete);
+        const facesToRemove = [];
+        for (let i = 0; i < this.faceCount; i++) {
+            const faceIndices = this.getFaceIndices(i);
+            let willRemove = false;
+            for (let j = 0; j < faceIndices.length; j++) {
+                if (indices.has(faceIndices[j])) {
+                    //TODO: fix this please
+                    facesToRemove.push(i-facesToRemove.length);
+                    willRemove = true;
+                    break;
+                }
+                faceIndices[j] -= countSmaller(indices, faceIndices[j]);
+            }
+
+            if (!willRemove) {
+                this._updateIndices(i, faceIndices);
+            }
+        }
+
+        this.deleteFaces(facesToRemove);
+
+        for (const index of indices) {
+            this.vertices.splice(index*3, 3);
+        }
+    }
+
+    _updateIndices(index, newIndices) {
+        const idx = index*3;
+        this.indices[idx  ] = newIndices[0];
+        this.indices[idx+1] = newIndices[1];
+        this.indices[idx+2] = newIndices[2];
+    }
+
+    deleteFaces(indices, withVertices=true) {
+        const removed = []
+        for (const index of indices){
+            removed.push(...this.indices.splice(index*3, 3));
+        }
+
+        // TODO: Need to add logic to change existing indices
+        // if (withVertices) {
+        //     const toDelete = [];
+        //
+        //     // Check for other faces with these vertices
+        //     for (const removedElement of removed) {
+        //         if (!this.indices.includes(removedElement)) {
+        //             toDelete.push(removedElement);
+        //         }
+        //     }
+        //
+        //     if (toDelete.length) {
+        //         for (const toDelElement of toDelete) {
+        //             this.vertices.splice(toDelElement, 1);
+        //         }
+        //     }
+        // }
+    }
+
+    subdivideFace(idx) {
+        const verts = this.getFaceVertices(idx);
+        const indices = this.getFaceIndices(idx);
+
+        this.deleteFaces([idx], false);
+        const newPointPositions = [];
+        newPointPositions.push(vec3.scale(vec3.create(), vec3.add(vec3.create(), verts[0], verts[1]), 1/2));
+        newPointPositions.push(vec3.scale(vec3.create(), vec3.add(vec3.create(), verts[1], verts[2]), 1/2));
+        newPointPositions.push(vec3.scale(vec3.create(), vec3.add(vec3.create(), verts[0], verts[2]), 1/2));
+
+        const newPoints = [];
+        for (const position of newPointPositions) {
+            newPoints.push(this.addVertex(position));
+        }
+
+        this.addFace([indices[0], newPoints[0], newPoints[2]]);
+        this.addFace([newPoints[0], indices[1], newPoints[1]]);
+        this.addFace([newPoints[1], indices[2], newPoints[2]]);
+        this.addFace([newPoints[0], newPoints[1], newPoints[2]]);
+    }
+
+    addFace(indices) {
+        if (indices.length !== 3) {
+            return;
+        }
+        this.indices.push(...indices);
+    }
+
+    addVertex(vertex) {
+        if (vertex.length !== 3) {
+            return;
+        }
+        this.vertices.push(...vertex);
+        return this.vertexCount;
+    }
+
+    setVertex(index, position) {
+        const idx = index*3;
+        this.vertices[idx] = position[0];
+        this.vertices[idx+1] = position[1];
+        this.vertices[idx+2] = position[2];
+    }
+
+    _generateBuffers() {
         this._buffer = []
         const indices = this.indices;
         for (let i = 0; i < indices.length; i+=3) {
@@ -63,6 +244,14 @@ export class MeshData {
             this._buffer.push(...a, ...res);
             this._buffer.push(...b, ...res);
             this._buffer.push(...c, ...res);
+        }
+
+        this._vbuffer = []
+        for (let i = 0; i < this.vertexCount; i++) {
+            
+            const a = this.getVertex(i);
+            const color = this.isSelected(i) ? SELECTED_COLOR : [0,0,0]
+            this._vbuffer.push(...a, ...color);
         }
     }
 

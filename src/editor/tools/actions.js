@@ -1,5 +1,5 @@
 import {Action} from './tool.js';
-import {STORE_SELECTED_NODES} from '../../scene/const.js';
+import {STORE_ACTIVE_NODE, STORE_SELECTED_NODES} from '../../scene/const.js';
 import {vec3} from 'gl-matrix';
 
 export class ZoomInAction extends Action {
@@ -39,5 +39,90 @@ export class FocusAction extends Action {
         vec3.scale(center, center, 1/selected.length);
 
         event.viewport.cameraControl.camera.setTarget(center);
+    }
+}
+
+export class ToggleEditModeAction extends Action {
+    constructor() {
+        super("Toggle Edit");
+    }
+
+    onActivate(event) {
+        const selectedNodes = event.store.getArray(STORE_SELECTED_NODES);
+
+        if (selectedNodes.length !== 1) {
+            console.warn("Only 1 object editing supported!")
+            this.deactivate();
+            return;
+        }
+
+        if (event.viewport.editMode) {
+            event.store.clear(STORE_ACTIVE_NODE);
+        } else {
+            event.store.set(STORE_ACTIVE_NODE, selectedNodes[0]);
+        }
+
+        event.viewport.toggleEdit();
+    }
+}
+
+export class SaveAction extends Action {
+    constructor() {
+        super("Save");
+    }
+
+    onActivate(event) {
+        event.scene.saveObjects();
+    }
+}
+
+export class SubdivideAllAction extends Action {
+    constructor() {
+        super("Subdivide All");
+    }
+
+    onActivate(event) {
+        const activeNode = event.store.getObject(STORE_ACTIVE_NODE);
+
+        if (!activeNode) {
+            console.warn("No node for grab found!");
+            return null;
+        }
+
+        const meshData = activeNode.meshData;
+
+        if (!meshData) {
+            console.warn("No mesh data found!");
+            return null;
+        }
+
+        meshData.subdivideFace(0);
+        meshData.updateBuffers();
+    }
+}
+
+export class DeleteSelectedVerticesAction extends Action {
+    constructor() {
+        super("Delete Vertices");
+    }
+
+    onActivate(event) {
+        const activeNode = event.store.getObject(STORE_ACTIVE_NODE);
+
+        if (!activeNode) {
+            console.warn("No node for grab found!");
+            return null;
+        }
+
+        const meshData = activeNode.meshData;
+
+        if (!meshData) {
+            console.warn("No mesh data found!");
+            return null;
+        }
+
+        meshData.deleteVertices(meshData.getSelectedVertices());
+        meshData.clearSelected();
+        meshData.updateBuffers();
     }
 }

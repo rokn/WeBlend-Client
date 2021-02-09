@@ -52,7 +52,8 @@ export class Camera extends Node {
     }
 
     get front() {
-        return vec3.sub(vec3.create(), this.props.target, this.transform.position);
+        const res = vec3.sub(vec3.create(), this.props.target, this.transform.position);
+        return vec3.normalize(res, res);
     }
 
     get target() {

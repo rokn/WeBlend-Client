@@ -1,8 +1,9 @@
 import {hexToRgb} from 'utils';
 import {mat4, vec3, vec2} from 'gl-matrix';
 import {
+    AddObjectTool,
     ALT_MOD,
-    CameraOrbitTool, CTRL_MOD, FocusAction, GrabTool,
+    CameraOrbitTool, CTRL_MOD, DeleteSelectedVerticesAction, FocusAction, GrabTool, GrabVertexTool,
     KEY_DOWN,
     KEY_UP, KeyCommand,
     Modifiers,
@@ -14,9 +15,9 @@ import {
     MOUSEB_SCROLL,
     MouseCommand,
     NO_MOD,
-    PanTool, RotateTool, ScaleTool,
-    SelectObjectAction,
-    SHIFT_MOD,
+    PanTool, RotateTool, SaveAction, ScaleTool,
+    SelectObjectAction, SelectVertexAction,
+    SHIFT_MOD, SubdivideAllAction, ToggleEditModeAction,
     ToolChooser, ZoomInAction, ZoomOutAction,
     ZoomTool,
 } from 'editor/tools';
@@ -24,7 +25,7 @@ import {CameraControl} from 'editor/camera_control'
 import {Store} from 'scene/store';
 import { vShader as vShader, outlineVShader } from './shaders.vert.js';
 import { fShader as fShader, outlineFShader } from './shaders.frag.js';
-import {STORE_GL} from 'scene/const';
+import {SELECTED_COLOR, STORE_GL} from 'scene/const';
 
 
 export class Viewport {
@@ -49,12 +50,11 @@ export class Viewport {
         this._modifyGLInstance();
 
         this._cameraControl = new CameraControl(canvas, this.gl);
-        this._store = new Store();
-        this._store.set(STORE_GL, this.gl);
 
-        this._root = null;
+        this._scene = null;
         this.width = canvas.width;
         this.height = canvas.height;
+        this._editMode = false;
         this._setUpAxisLines();
         this._setupTools();
         this._setupEvents(canvas);
@@ -65,12 +65,12 @@ export class Viewport {
         return this._cameraControl;
     }
 
-    get root() {
-        return this._root;
+    get editMode() {
+        return this._editMode;
     }
 
-    get store() {
-        return this._store;
+    toggleEdit() {
+        this._editMode = !this._editMode;
     }
 
     _compileShader(code, type) {
@@ -127,13 +127,17 @@ export class Viewport {
         }
     }
 
-    setRoot(newRoot) {
-        this._root = newRoot;
-        this._root.store = this.store;
+    setScene(newScene) {
+        this._scene = newScene;
+        this._scene.store.set(STORE_GL, this.gl);
+    }
+
+    get scene() {
+        return this._scene;
     }
 
     setCamera(camera) {
-        camera.store = this.store;
+        camera.store = this.scene.store;
         this.cameraControl.setCamera(camera);
 
         this.useProgram(this.defaultProgram);
@@ -153,21 +157,25 @@ export class Viewport {
 
         this._drawAxisLines();
 
-        if (this.root) {
+        if (this.scene.root) {
             let options = {
-                drawOutline: true
+                drawOutline: true,
+                editMode: this.editMode,
             };
 
-            gl.cullFace(gl.FRONT);
-            this.useProgram(this.outlineProgram);
-            this.cameraControl.updateViewMatrix()
-            this.root.draw(options)
+            if (!options.editMode) {
+                gl.enable(gl.CULL_FACE);
+                gl.cullFace(gl.FRONT);
+                this.useProgram(this.outlineProgram);
+                this.cameraControl.updateViewMatrix()
+                this.scene.root.draw(options)
+            }
 
             options.drawOutline = false;
-            gl.cullFace(gl.BACK);
+            gl.disable(gl.CULL_FACE);
             this.useProgram(this.defaultProgram);
             this.cameraControl.updateViewMatrix()
-            this.root.draw(options)
+            this.scene.root.draw(options)
         }
     }
 
@@ -251,6 +259,14 @@ export class Viewport {
     _setupTools() {
         let toolCommands = [];
 
+        const noEdit = () => !this.editMode;
+        const onlyEdit = () => this.editMode;
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'KeyS', null, null, CTRL_MOD),
+            tool: new SaveAction(),
+        });
+
         const panTool = new PanTool();
         toolCommands.push({
             command: new MouseCommand(MOUSE_DOWN, MOUSEB_SCROLL, null, null, SHIFT_MOD),
@@ -289,13 +305,23 @@ export class Viewport {
         });
 
         toolCommands.push({
-            command: new MouseCommand(MOUSE_DOWN, MOUSEB_PRIMARY, null, null, null),
+            command: new MouseCommand(MOUSE_DOWN, MOUSEB_PRIMARY, null, null, null, noEdit),
             tool: new SelectObjectAction(),
         });
 
         toolCommands.push({
-            command: new KeyCommand(KEY_DOWN, 'KeyG', null, null, null),
+            command: new MouseCommand(MOUSE_DOWN, MOUSEB_PRIMARY, null, null, null, onlyEdit),
+            tool: new SelectVertexAction(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'KeyG', null, null, null, noEdit),
             tool: new GrabTool(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'KeyG', null, null, null, onlyEdit),
+            tool: new GrabVertexTool(),
         });
 
         toolCommands.push({
@@ -304,13 +330,33 @@ export class Viewport {
         });
 
         toolCommands.push({
-            command: new KeyCommand(KEY_DOWN, 'KeyR', null, null, null),
+            command: new KeyCommand(KEY_DOWN, 'KeyR', null, null, null, noEdit),
             tool: new RotateTool(),
         });
 
         toolCommands.push({
-            command: new KeyCommand(KEY_DOWN, 'KeyS', null, null, null),
+            command: new KeyCommand(KEY_DOWN, 'KeyS', null, null, null, noEdit),
             tool: new ScaleTool(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'KeyA', null, null, SHIFT_MOD, noEdit),
+            tool: new AddObjectTool(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'Tab', null, null, null),
+            tool: new ToggleEditModeAction(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'KeyR', null, null, null, onlyEdit),
+            tool: new SubdivideAllAction(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'Delete', null, null, null, onlyEdit),
+            tool: new DeleteSelectedVerticesAction(),
         });
 
         this.mainTool = new ToolChooser(toolCommands);
@@ -321,8 +367,9 @@ export class Viewport {
 
         const handleEvent = (event) => {
             event.viewport = this;
-            event.store = this.store; // For easier access
-            event.sceneRoot = this.root; // For easier access
+            event.scene = this.scene; // For easier access
+            event.store = this.scene.store; // For easier access
+            event.sceneRoot = this.scene.root; // For easier access
             event.modifiers = new Modifiers(event.shiftKey, event.ctrlKey, event.altKey, event.metaKey);
             event.consume =  event.preventDefault;
             event.mousePosition = this.lastMousePosition;
@@ -390,7 +437,7 @@ export class Viewport {
 
         const outlineColor = gl.getParamLocation('outlineColor');
         const outlineScale = gl.getParamLocation('outlineScale');
-        gl.uniform3fv(outlineColor, [0.99, 0.73, 0.01]);
+        gl.uniform3fv(outlineColor, SELECTED_COLOR);
         const scale = 1.03;
         gl.uniformMatrix4fv(outlineScale, false, mat4.fromScaling(mat4.create(), vec3.fromValues(scale, scale, scale)));
     }

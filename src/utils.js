@@ -1,4 +1,5 @@
 import {vec3} from 'gl-matrix';
+import {Ray} from "./scene";
 
 
 export function hexToRgb(hex) {
@@ -38,4 +39,34 @@ export function min(a, b) {
 
 export function max(a, b) {
     return Math.max(a, b);
+}
+
+export function getMouseRay(event) {
+    let viewportCamera = event.viewport.cameraControl.camera;
+
+    const nearVec = vec3.fromValues(event.mousePosition.x, event.mousePosition.y, 0);
+    const farVec = vec3.fromValues(event.mousePosition.x, event.mousePosition.y, 1);
+    const from = viewportCamera.unproject(nearVec, 0, 0, event.viewport.width, event.viewport.height);
+    const to = viewportCamera.unproject(farVec, 0, 0, event.viewport.width, event.viewport.height);
+
+    return new Ray(from, vec3.sub(vec3.create(), to, from));
+}
+
+export function saveFile(content, fileName, contentType) {
+    var a = document.createElement("a");
+    var file = new Blob([content], {type: contentType});
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+}
+
+export function countSmaller(arr, el) {
+    let count = 0;
+    for (const arrEl of arr) {
+        if (arrEl < el) {
+            count++;
+        }
+    }
+
+    return count;
 }

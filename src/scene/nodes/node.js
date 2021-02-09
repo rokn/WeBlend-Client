@@ -8,7 +8,7 @@ export class Node {
         this.name = name;
         this.children = [];
         this.transform = new Transform();
-        this.transform.onChanged(this)
+        this.transform.subscribe((_, __) => this.onTransformChanged());
         this._nodeMatrix = mat4.create();
 
         this.id = ID_COUNTER++;

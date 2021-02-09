@@ -3,6 +3,7 @@ import {STORE_SELECTED_NODES} from 'scene';
 import {Ray} from 'scene';
 import {traverseNodesDFS} from 'editor/object_utils';
 import {vec3} from 'gl-matrix';
+import {getMouseRay} from "../../utils.js";
 
 
 export class SelectObjectAction extends Action {
@@ -30,12 +31,7 @@ export class SelectObjectAction extends Action {
                 return;
             }
 
-            const nearVec = vec3.fromValues(event.offsetX, event.offsetY, 0);
-            const farVec = vec3.fromValues(event.offsetX, event.offsetY, 1);
-            const from = viewportCamera.unproject(nearVec, 0, 0, event.viewport.width, event.viewport.height);
-            const to = viewportCamera.unproject(farVec, 0, 0, event.viewport.width, event.viewport.height);
-
-            const r = new Ray(from, vec3.sub(vec3.create(), to, from));
+            const r = getMouseRay(event);
 
             const res = r.intersectAABB(aabb);
             if (res.hit && res.t < minT) {

@@ -9,12 +9,12 @@ import {
     Tool
 } from 'editor/tools/tool';
 import {vec2, vec3} from 'gl-matrix';
-import {STORE_SELECTED_NODES} from 'scene/const';
+import {STORE_ACTIVE_NODE, STORE_SELECTED_NODES} from 'scene/const';
 
 
-export class GrabTool extends Tool {
+export class GrabVertexTool extends Tool {
     constructor() {
-        super("Grab Tool");
+        super("Grab Vertex Tool");
 
         this.addCommand(new MouseCommand(MOUSE_MOVE, null, 'move', (ev) => this.handleMove(ev)));
         this.addCommand(new MouseCommand(MOUSE_DOWN, MOUSEB_PRIMARY, 'stop', (ev) => this.handleStop(ev)));
@@ -30,25 +30,33 @@ export class GrabTool extends Tool {
     }
 
     handleMove(event) {
+        const meshData = this.getMeshData(event)
+        if (!meshData) {
+            this.deactivate();
+            return;
+        }
+
         const camera = event.viewport.cameraControl.camera;
         const dist = camera.distance;
 
         const diff = vec2.sub(vec2.create(), event.mousePosition, this.dragPos);
 
-        const selected = event.store.getArray(STORE_SELECTED_NODES)
-        for (let i = 0; i < this.startPositions.length; i++) {
-            let newPos = vec3.clone(this.startPositions[i]);
+        const newPositions = {};
+        for (const [idx, pos] of Object.entries(this.startPositions)) {
+            let newPos = vec3.clone(pos);
             vec3.add(newPos, newPos, vec3.scale(vec3.create(), this.camLocal[0], dist*diff.x/1300));
             vec3.add(newPos, newPos, vec3.scale(vec3.create(), this.camLocal[1], dist*-diff.y/1300));
 
             for (let axis = 0; axis < this.activeAxes.length; axis++) {
                 if (!this.activeAxes[axis]) {
-                    newPos[axis] = this.startPositions[i][axis];
+                    newPos[axis] = pos[axis];
                 }
             }
 
-            selected[i].transform.setPosition(newPos);
+            newPositions[idx] = newPos;
         }
+
+        meshData.batchUpdateVertices(newPositions);
     }
 
     activate(event, onDeactivate) {
@@ -56,17 +64,16 @@ export class GrabTool extends Tool {
 
         this.activeAxes = [true, true, true]
 
-        const selected = event.store.getArray(STORE_SELECTED_NODES);
-
-        if (!selected.length) {
+        const meshData = this.getMeshData(event)
+        if (!meshData) {
             this.deactivate();
             return;
         }
 
-        this.startPositions = [];
+        this.startPositions = {};
 
-        for (const node of selected) {
-            this.startPositions.push(vec3.clone(node.transform.position));
+        for (const idx of meshData.getSelectedVertices()) {
+            this.startPositions[idx] = meshData.getVertex(idx);
         }
 
         this.dragPos = vec2.clone(event.mousePosition)
@@ -81,19 +88,37 @@ export class GrabTool extends Tool {
     }
 
     handleCancel(event) {
-        //TODO: remove transaction
-        event.store.transaction(STORE_SELECTED_NODES, selected => {
-            for (let i = 0; i < this.startPositions.length; i++) {
-                selected[i].transform.setPosition(this.startPositions[i]);
-            }
+        const meshData = this.getMeshData(event)
+        if (!meshData) {
+            // Don't know how this could happen but eeh... good luck
+            this.deactivate();
+            return;
+        }
 
-            return true;
-        })
+        meshData.batchUpdateVertices(this.startPositions);
     }
 
     handleAxisChange(event, axis) {
         const activate = !event.modifiers.shift;
         this.activeAxes = [!activate, !activate, !activate];
         this.activeAxes[axis] = activate;
+    }
+
+    getMeshData(event) {
+        const activeNode = event.store.getObject(STORE_ACTIVE_NODE);
+
+        if (!activeNode) {
+            console.warn("No node for grab found!");
+            return null;
+        }
+
+        const meshData = activeNode.meshData;
+
+        if (!meshData) {
+            console.warn("No mesh data found!");
+            return null;
+        }
+
+        return meshData;
     }
 }

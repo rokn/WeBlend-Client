@@ -20,15 +20,16 @@ export const CTRL_MOD = new Modifiers(false, true, false, false);
 export const ALT_MOD = new Modifiers(false, false, true, false);
 
 export class Command {
-    constructor(name, callback, modifiers) {
+    constructor(name, callback, modifiers, isActive = null) {
         this.name = name;
         this.callback = callback;
         this.tool = null;
         this.modifiers = modifiers;
+        this.isActive = isActive;
     }
 
     matches(event) {
-        return false
+        return false;
     }
 
     activate(event) {
@@ -45,13 +46,17 @@ export const MOUSEB_PRIMARY = 0;
 export const MOUSEB_SCROLL = 1;
 export const MOUSEB_SECONDARY = 2;
 export class MouseCommand extends Command {
-    constructor(eventType, button, name, callback, modifiers = null) {
-        super(name, callback, modifiers);
+    constructor(eventType, button, name, callback, modifiers = null, isActive=null) {
+        super(name, callback, modifiers, isActive);
         this.eventType = eventType;
         this.button = button;
     }
 
     matches(event) {
+        if (this.isActive !== null && !this.isActive())  {
+            return super.matches(event);
+        }
+
         if (event.eventType === this.eventType && (!this.modifiers || this.modifiers.matches(event.modifiers))) {
             if(this.button === null || this.button === event.button) {
                 return true;
@@ -64,13 +69,17 @@ export class MouseCommand extends Command {
 export const KEY_DOWN = 0;
 export const KEY_UP = 1;
 export class KeyCommand extends Command {
-    constructor(eventType, code, name, callback, modifiers = null) {
-        super(name, callback, modifiers);
+    constructor(eventType, code, name, callback, modifiers = null, isActive = null) {
+        super(name, callback, modifiers, isActive);
         this.eventType = eventType;
         this.code = code;
     }
 
     matches(event) {
+        if (this.isActive !== null && !this.isActive())  {
+            return super.matches(event);
+        }
+
         if (event.eventType === this.eventType && (!this.modifiers || this.modifiers.matches(event.modifiers))) {
             if(this.code === event.code) {
                 return true;
@@ -133,9 +142,12 @@ export class Action extends Tool {
         super.activate(event, onDeactivate);
 
         // Activate subclass
-        this.onActivate(event);
+        const callback = this.onActivate(event);
 
         this.deactivate();
+        if (callback) {
+            callback();
+        }
     }
 
     onActivate(event) {
