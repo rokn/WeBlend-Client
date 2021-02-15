@@ -29,7 +29,11 @@ export class Command {
     }
 
     matches(event) {
-        return false;
+        if (this.isActive !== null && !this.isActive())  {
+            return false;
+        }
+
+        return !this.modifiers || this.modifiers.matches(event.modifiers);
     }
 
     activate(event) {
@@ -37,10 +41,17 @@ export class Command {
     }
 }
 
+//Event types
 export const MOUSE_DOWN = 0;
 export const MOUSE_MOVE = 1;
 export const MOUSE_UP = 2;
 export const MOUSE_SCROLL = 3;
+export const KEY_DOWN = 4;
+export const KEY_UP = 5;
+export const TOUCH_START = 6;
+export const TOUCH_END = 7;
+export const TOUCH_MOVE = 8;
+export const TOUCH_CANCEL = 9;
 
 export const MOUSEB_PRIMARY = 0;
 export const MOUSEB_SCROLL = 1;
@@ -53,21 +64,12 @@ export class MouseCommand extends Command {
     }
 
     matches(event) {
-        if (this.isActive !== null && !this.isActive())  {
-            return super.matches(event);
-        }
-
-        if (event.eventType === this.eventType && (!this.modifiers || this.modifiers.matches(event.modifiers))) {
-            if(this.button === null || this.button === event.button) {
-                return true;
-            }
-        }
-        return super.matches(event);
+        return super.matches(event) &&
+                event.eventType === this.eventType &&
+                (this.button === null || this.button === event.button);
     }
 }
 
-export const KEY_DOWN = 0;
-export const KEY_UP = 1;
 export class KeyCommand extends Command {
     constructor(eventType, code, name, callback, modifiers = null, isActive = null) {
         super(name, callback, modifiers, isActive);
@@ -76,17 +78,20 @@ export class KeyCommand extends Command {
     }
 
     matches(event) {
-        if (this.isActive !== null && !this.isActive())  {
-            return super.matches(event);
-        }
+        return event.eventType === this.eventType &&
+            (!this.modifiers || this.modifiers.matches(event.modifiers)) &&
+            this.code === event.code;
+    }
+}
 
-        if (event.eventType === this.eventType && (!this.modifiers || this.modifiers.matches(event.modifiers))) {
-            if(this.code === event.code) {
-                return true;
-            }
-        }
+export class TouchCommand extends Command {
+    constructor(eventType, name, callback, modifiers = null, isActive=null) {
+        super(name, callback, modifiers, isActive);
+        this.eventType = eventType;
+    }
 
-        return super.matches(event);
+    matches(event) {
+        return super.matches(event) && event.eventType === this.eventType;
     }
 }
 

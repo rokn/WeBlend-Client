@@ -13,13 +13,17 @@ import {
     MOUSE_UP,
     MOUSEB_PRIMARY,
     MOUSEB_SCROLL,
+    TOUCH_START,
+    TOUCH_CANCEL,
+    TOUCH_END,
+    TOUCH_MOVE,
     MouseCommand,
     NO_MOD,
     PanTool, RotateTool, SaveAction, ScaleTool,
     SelectObjectAction, SelectVertexAction,
     SHIFT_MOD, SubdivideAllAction, ToggleEditModeAction,
     ToolChooser, ZoomInAction, ZoomOutAction,
-    ZoomTool,
+    ZoomTool, TouchCommand,
 } from 'editor/tools';
 import {CameraControl} from 'editor/camera_control'
 import {Store} from 'scene/store';
@@ -278,6 +282,11 @@ export class Viewport {
             tool: panTool
         });
 
+        toolCommands.push({
+            command: new TouchCommand(TOUCH_START, null, null, NO_MOD),
+            tool: panTool
+        });
+
         const cameraOrbitTool = new CameraOrbitTool();
         toolCommands.push({
             command: new MouseCommand(MOUSE_DOWN, MOUSEB_SCROLL, null, null, NO_MOD),
@@ -286,6 +295,11 @@ export class Viewport {
 
         toolCommands.push({
             command: new MouseCommand(MOUSE_DOWN, MOUSEB_PRIMARY, null, null, CTRL_MOD),
+            tool: cameraOrbitTool,
+        });
+
+        toolCommands.push({
+            command: new TouchCommand(TOUCH_START, null, null, CTRL_MOD),
             tool: cameraOrbitTool,
         });
 
@@ -373,6 +387,9 @@ export class Viewport {
             event.modifiers = new Modifiers(event.shiftKey, event.ctrlKey, event.altKey, event.metaKey);
             event.consume =  event.preventDefault;
             event.mousePosition = this.lastMousePosition;
+            if (event.isTouch === undefined) {
+                event.isTouch = false;
+            }
             this.mainTool.handleEvent(event);
         };
 
@@ -413,6 +430,31 @@ export class Viewport {
             })
         };
 
+        const addTouchEvent = evName => {
+            canvas.addEventListener(evName, event => {
+                switch(evName) {
+                    case 'touchstart':
+                        event.eventType = TOUCH_START;
+                        event.touch = event.changedTouches[0];
+                        break;
+                    case 'touchend':
+                        event.eventType = TOUCH_END;
+                        event.touch = event.changedTouches[0];
+                        break;
+                    case 'touchmove':
+                        event.eventType = TOUCH_MOVE;
+                        event.touch = event.changedTouches[0];
+                        break;
+                    case 'touchcancel':
+                        event.eventType = TOUCH_CANCEL;
+                        event.touch = event.changedTouches[0];
+                        break;
+                }
+                event.isTouch = true;
+                handleEvent(event);
+            });
+        };
+
         addMouseEvent('mousedown');
         addMouseEvent('mousemove');
         addMouseEvent('mouseup');
@@ -420,6 +462,11 @@ export class Viewport {
 
         addKeyEvent('keydown');
         addKeyEvent('keyup');
+
+        addTouchEvent('touchstart');
+        addTouchEvent('touchend');
+        addTouchEvent('touchmove');
+        addTouchEvent('touchcancel');
     }
 
     _setupPrograms() {
