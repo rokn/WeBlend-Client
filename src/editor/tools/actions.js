@@ -96,7 +96,7 @@ export class SubdivideAllAction extends Action {
             return null;
         }
 
-        meshData.subdivideFace(0);
+        meshData.subdivideFaces([...Array(meshData.faceCount).keys()]);
         meshData.updateBuffers();
     }
 }

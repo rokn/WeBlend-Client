@@ -132,6 +132,9 @@ export class MeshData {
 
     deleteVertices(indicesToDelete) {
         const indices = new Set(indicesToDelete);
+        if (!indices.size) {
+            return;
+        }
         const facesToRemove = [];
         for (let i = 0; i < this.faceCount; i++) {
             const faceIndices = this.getFaceIndices(i);
@@ -151,10 +154,11 @@ export class MeshData {
             }
         }
 
-        this.deleteFaces(facesToRemove);
+        this.deleteFaces(facesToRemove, false);
 
         for (const index of indices) {
-            this.vertices.splice(index*3, 3);
+            const realIndex = index - countSmaller(indices, index);
+            this.vertices.splice(realIndex*3, 3);
         }
     }
 
@@ -168,47 +172,79 @@ export class MeshData {
     deleteFaces(indices, withVertices=true) {
         const removed = []
         for (const index of indices){
-            removed.push(...this.indices.splice(index*3, 3));
+            const realIndex = index - countSmaller(indices, index);
+            removed.push(...this.indices.splice(realIndex*3, 3));
         }
 
-        // TODO: Need to add logic to change existing indices
-        // if (withVertices) {
-        //     const toDelete = [];
-        //
-        //     // Check for other faces with these vertices
-        //     for (const removedElement of removed) {
-        //         if (!this.indices.includes(removedElement)) {
-        //             toDelete.push(removedElement);
-        //         }
-        //     }
-        //
-        //     if (toDelete.length) {
-        //         for (const toDelElement of toDelete) {
-        //             this.vertices.splice(toDelElement, 1);
-        //         }
-        //     }
-        // }
+        if (withVertices) {
+            const toDelete = [];
+
+            // Check for other faces with these vertices
+            for (const removedElement of removed) {
+                if (!this.indices.includes(removedElement)) {
+                    toDelete.push(removedElement);
+                }
+            }
+
+            this.deleteVertices(toDelete);
+        }
     }
 
-    subdivideFace(idx) {
-        const verts = this.getFaceVertices(idx);
-        const indices = this.getFaceIndices(idx);
+    _midPoint(v1, v2) {
+        return vec3.scale(vec3.create(), vec3.add(vec3.create(), v1, v2), 1/2);
+    }
 
-        this.deleteFaces([idx], false);
-        const newPointPositions = [];
-        newPointPositions.push(vec3.scale(vec3.create(), vec3.add(vec3.create(), verts[0], verts[1]), 1/2));
-        newPointPositions.push(vec3.scale(vec3.create(), vec3.add(vec3.create(), verts[1], verts[2]), 1/2));
-        newPointPositions.push(vec3.scale(vec3.create(), vec3.add(vec3.create(), verts[0], verts[2]), 1/2));
+    subdivideFaces(faceIndices) {
+        let edgeVerts = {};
+        const addToEdges = (iF, iS, vF, vS, mid=null) =>  {
+            if (edgeVerts[iF] === undefined) {
+                mid = mid ? mid : this.addVertex(this._midPoint(vF, vS));
+                edgeVerts[iF] = {
+                    [iS]: mid
+                }
+            } else {
+                if (edgeVerts[iF][iS] === undefined) {
+                    mid = mid ? mid : this.addVertex(this._midPoint(vF, vS));
+                    edgeVerts[iF][iS] = mid;
+                }
+            }
 
-        const newPoints = [];
-        for (const position of newPointPositions) {
-            newPoints.push(this.addVertex(position));
+            return edgeVerts[iF][iS];
+        };
+
+        for (const faceIdx of faceIndices) {
+            const verts = this.getFaceVertices(faceIdx);
+            const indices = this.getFaceIndices(faceIdx);
+
+            for (let curr = 0; curr < 3; curr++) {
+                let next = (curr+1)%3;
+                let i1 = indices[curr];
+                let i2 = indices[next];
+
+                let newPoint = addToEdges(i1, i2, verts[curr], verts[next]);
+                addToEdges(i2, i1, verts[next], verts[curr], newPoint);
+            }
+        }
+        for (const faceIdx of faceIndices) {
+            const indices = this.getFaceIndices(faceIdx);
+            for (let curr = 0; curr < 3; curr++) {
+                let next = (curr+1)%3;
+                let latter = (curr+2)%3;
+                let i1 = indices[curr];
+                let i2 = indices[next];
+                let i3 = indices[latter];
+                this.addFace([i1, edgeVerts[i1][i2], edgeVerts[i1][i3]]);
+            }
+            this.addFace([
+                edgeVerts[indices[0]][indices[1]],
+                edgeVerts[indices[1]][indices[2]],
+                edgeVerts[indices[2]][indices[0]]
+            ]);
         }
 
-        this.addFace([indices[0], newPoints[0], newPoints[2]]);
-        this.addFace([newPoints[0], indices[1], newPoints[1]]);
-        this.addFace([newPoints[1], indices[2], newPoints[2]]);
-        this.addFace([newPoints[0], newPoints[1], newPoints[2]]);
+        this.deleteFaces(faceIndices, false);
+
+        console.log(this.vertexCount);
     }
 
     addFace(indices) {
@@ -223,7 +259,7 @@ export class MeshData {
             return;
         }
         this.vertices.push(...vertex);
-        return this.vertexCount;
+        return this.vertexCount-1;
     }
 
     setVertex(index, position) {

@@ -1,11 +1,14 @@
 import {
-    CTRL_MOD,
-    DeactivateCommand, MOUSE_DOWN,
+    DeactivateCommand,
     MOUSE_MOVE,
-    MOUSE_UP, MOUSEB_PRIMARY,
+    MOUSE_UP,
+    MOUSEB_PRIMARY,
     MOUSEB_SCROLL,
     MouseCommand,
-    Tool, TOUCH_CANCEL, TOUCH_END, TOUCH_MOVE,
+    Tool,
+    TOUCH_CANCEL,
+    TOUCH_END,
+    TOUCH_MOVE,
     TouchCommand
 } from 'editor/tools/tool';
 import {vec2} from 'gl-matrix';
@@ -68,6 +71,7 @@ export class CameraOrbitTool extends Tool{
             return;
         }
 
+        this.touchId = null;
         this.deactivate();
     }
 }

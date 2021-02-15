@@ -78,8 +78,8 @@ export class KeyCommand extends Command {
     }
 
     matches(event) {
-        return event.eventType === this.eventType &&
-            (!this.modifiers || this.modifiers.matches(event.modifiers)) &&
+        return super.matches(event) &&
+            event.eventType === this.eventType &&
             this.code === event.code;
     }
 }

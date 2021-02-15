@@ -70,6 +70,7 @@ export class PanTool extends Tool{
             return;
         }
 
+        this.touchId = null;
         this.deactivate();
     }
 }
