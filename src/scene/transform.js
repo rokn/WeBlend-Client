@@ -49,4 +49,13 @@ export class Transform extends Observable {
             this.origin
         );
     }
+
+    serialize() {
+        return {
+            position: this.position.serialize(),
+            rotation: this.rotation.serialize(),
+            scale: this.scale.serialize(),
+            origin: this.origin.serialize(),
+        }
+    }
 }

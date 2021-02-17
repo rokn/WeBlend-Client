@@ -3,6 +3,8 @@ import {AABB} from 'scene';
 import {vec3} from 'gl-matrix'
 import {SELECTED_COLOR} from 'scene/const';
 
+let MESH_DATA_COUNTER = 0;
+
 export class MeshData {
     constructor (gl, vertices, indices) {
         this.vertices = vertices;
@@ -15,6 +17,7 @@ export class MeshData {
         this._geomBuf = gl.createBuffer();
         this._verticesBuffer = gl.createBuffer();
 
+        this.id = MESH_DATA_COUNTER++;
 
         this._updateMainBuffer();
         this._updateVerticesBuffer();
@@ -333,6 +336,10 @@ export class MeshDataLink {
 
     destroy() {
         this._instance.removeUser();
+    }
+
+    serialize() {
+        return this._instance.id;
     }
 }
 

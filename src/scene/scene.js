@@ -9,8 +9,9 @@ export class Scene {
         this.author = author;
         this.createdDate = createdDate ? createdDate : new Date();
         this._root = new Node('__root', null);
-        this._store = new Store()
-        this._root.store = this._store;
+        this._store = new Store();
+        this._localStore = new Store();
+        this._root.scene = this;
     }
 
     get root() {
@@ -18,6 +19,10 @@ export class Scene {
     }
 
     get store() {
+        return this._store;
+    }
+
+    get localStore() {
         return this._store;
     }
 

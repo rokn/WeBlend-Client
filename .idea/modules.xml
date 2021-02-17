@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/weblend-client.iml" filepath="$PROJECT_DIR$/.idea/weblend-client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../WeBlend/.idea/weblend-server.iml" filepath="$PROJECT_DIR$/../WeBlend/.idea/weblend-server.iml" />
     </modules>
   </component>
 </project>

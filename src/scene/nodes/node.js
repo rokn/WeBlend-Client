@@ -13,10 +13,9 @@ export class Node {
 
         this.id = ID_COUNTER++;
 
-        this.store = null;
+        this.scene = null;
         this.parent = parent;
         this.props = {};
-        this.origin = vec3.fromValues(0,0,0);
 
         this._selected = false;
 
@@ -27,10 +26,6 @@ export class Node {
 
     get position() {
         return vec3.transformMat4(vec3.create(), this.origin, this._nodeMatrix);
-    }
-
-    get relativeOrigin() {
-        return origin;
     }
 
     get nodeMatrix() {
@@ -56,7 +51,7 @@ export class Node {
 
     addChild(childNode) {
         this.children.push(childNode);
-        childNode.store = this.store;
+        childNode.scene = this.scene;
     }
 
     draw(options) {
@@ -71,5 +66,19 @@ export class Node {
 
     _updateNodeMatrix() {
         this.transform.toNodeMatrix(this._nodeMatrix);
+    }
+
+    serialize() {
+        let props = {}
+        for (const [key, prop] of Object.entries(this.props)) {
+            props[key] = prop.serialize()
+        }
+
+        return {
+            name: this.name,
+            children: this.children.map(c => c.serialize()),
+            transform: this.transform.serialize(),
+            props
+        }
     }
 }

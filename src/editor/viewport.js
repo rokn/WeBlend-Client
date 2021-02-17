@@ -23,10 +23,9 @@ import {
     SelectObjectAction, SelectVertexAction,
     SHIFT_MOD, SubdivideAllAction, ToggleEditModeAction,
     ToolChooser, ZoomInAction, ZoomOutAction,
-    ZoomTool, TouchCommand,
+    ZoomTool, TouchCommand, SerializeAction,
 } from 'editor/tools';
 import {CameraControl} from 'editor/camera_control'
-import {Store} from 'scene/store';
 import { vShader as vShader, outlineVShader } from './shaders.vert.js';
 import { fShader as fShader, outlineFShader } from './shaders.frag.js';
 import {SELECTED_COLOR, STORE_GL} from 'scene/const';
@@ -133,7 +132,7 @@ export class Viewport {
 
     setScene(newScene) {
         this._scene = newScene;
-        this._scene.store.set(STORE_GL, this.gl);
+        this._scene.localStore.set(STORE_GL, this.gl);
     }
 
     get scene() {
@@ -141,7 +140,7 @@ export class Viewport {
     }
 
     setCamera(camera) {
-        camera.store = this.scene.store;
+        camera.scene = this.scene;
         this.cameraControl.setCamera(camera);
 
         this.useProgram(this.defaultProgram);
@@ -271,6 +270,11 @@ export class Viewport {
             tool: new SaveAction(),
         });
 
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'KeyS', null, null, ALT_MOD),
+            tool: new SerializeAction(),
+        });
+
         const panTool = new PanTool();
         toolCommands.push({
             command: new MouseCommand(MOUSE_DOWN, MOUSEB_SCROLL, null, null, SHIFT_MOD),
@@ -382,7 +386,7 @@ export class Viewport {
         const handleEvent = (event) => {
             event.viewport = this;
             event.scene = this.scene; // For easier access
-            event.store = this.scene.store; // For easier access
+            event.store = this.scene.localStore; // For easier access
             event.sceneRoot = this.scene.root; // For easier access
             event.modifiers = new Modifiers(event.shiftKey, event.ctrlKey, event.altKey, event.metaKey);
             event.consume =  event.preventDefault;

@@ -126,3 +126,13 @@ export class DeleteSelectedVerticesAction extends Action {
         meshData.updateBuffers();
     }
 }
+
+export class SerializeAction extends Action {
+    constructor() {
+        super("Serialize");
+    }
+
+    onActivate(event) {
+        console.log(event.sceneRoot.serialize());
+    }
+}

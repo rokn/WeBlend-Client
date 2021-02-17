@@ -35,3 +35,7 @@ Object.defineProperties(glMatrix.ARRAY_TYPE.prototype, {
         set: function (val) {this[3] = val;}
     },
 })
+
+glMatrix.ARRAY_TYPE.prototype.serialize = function() {
+    return Array.from(this);
+}

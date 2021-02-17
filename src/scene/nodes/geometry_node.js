@@ -10,7 +10,7 @@ export class GeometryNode extends Node {
     }
 
     get gl() {
-        return this.store.getObject(STORE_GL)
+        return this.scene.localStore.getObject(STORE_GL)
     }
 
     get meshData() {

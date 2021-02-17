@@ -13,5 +13,6 @@
     <orderEntry type="library" name="hotkeys-js" level="application" />
     <orderEntry type="library" name="react-dom" level="application" />
     <orderEntry type="library" name="react" level="application" />
+    <orderEntry type="module" module-name="weblend-server" />
   </component>
 </module>
