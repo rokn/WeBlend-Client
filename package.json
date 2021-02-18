@@ -35,6 +35,7 @@
   "dependencies": {
     "bind.js": "^1.1.6",
     "gl-matrix": "^3.3.0",
+    "restful.js": "^0.9.6",
     "rivets": "^0.9.6",
     "vue": "^2.6.12"
   }

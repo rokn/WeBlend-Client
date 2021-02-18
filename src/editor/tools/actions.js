@@ -1,6 +1,7 @@
 import {Action} from './tool.js';
 import {STORE_ACTIVE_NODE, STORE_SELECTED_NODES} from '../../scene/const.js';
 import {vec3} from 'gl-matrix';
+import {saveScene} from 'api';
 
 export class ZoomInAction extends Action {
     constructor() {
@@ -133,6 +134,8 @@ export class SerializeAction extends Action {
     }
 
     onActivate(event) {
-        console.log(event.scene.serialize());
+        const serialized = event.scene.serialize();
+        console.log(JSON.stringify(serialized));
+        saveScene(serialized);
     }
 }

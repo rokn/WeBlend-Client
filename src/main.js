@@ -5,8 +5,10 @@ import {GeometryNode} from 'scene/nodes';
 import {App} from 'ui';
 
 import './css/main.css'
-import {createCube} from "./editor/objects/cube.js";
-import {Scene} from "./scene/scene.js";
+import {createCube} from "editor/objects/cube.js";
+import {Scene} from "scene/scene.js";
+
+import 'api'
 
 const viewport = new Viewport('mainCanvas')
 
