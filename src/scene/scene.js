@@ -1,6 +1,5 @@
 import {Store} from 'scene/store';
 import {GeometryNode, Node} from "./nodes";
-import {traverseNodesDFS} from "../editor/object_utils.js";
 import {saveFile} from "../utils.js";
 
 export class Scene {
@@ -23,7 +22,7 @@ export class Scene {
     }
 
     get localStore() {
-        return this._store;
+        return this._localStore;
     }
 
     newSaveObject(name = null) {
@@ -61,5 +60,15 @@ export class Scene {
         }
 
         return parentNew;
+    }
+
+    serialize() {
+        return {
+            name: this.name,
+            author: this.author,
+            createdDate: this.createdDate,
+            root: this._root.serialize(),
+            store: this.store.serialize(),
+        }
     }
 }

@@ -133,6 +133,6 @@ export class SerializeAction extends Action {
     }
 
     onActivate(event) {
-        console.log(event.sceneRoot.serialize());
+        console.log(event.scene.serialize());
     }
 }

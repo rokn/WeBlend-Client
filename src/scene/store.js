@@ -53,4 +53,25 @@ export class Store {
         this._stores[key] = undefined;
         this.update(key);
     }
+
+    serialize() {
+        let serialized = {}
+        for (const [key, obj] of Object.entries(this._stores)) {
+            if (Array.isArray(obj)) {
+                serialized[key] = [];
+                for (const el of obj) {
+                    if (el.serialize) {
+                        serialized[key].push(el.serialize());
+                    } else {
+                        serialized[key].push(el);
+                    }
+                }
+            } else {
+                console.log(key)
+                serialized[key] = obj.serialize()
+            }
+        }
+
+        return serialized;
+    }
 }

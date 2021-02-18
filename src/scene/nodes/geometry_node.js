@@ -18,7 +18,7 @@ export class GeometryNode extends Node {
     }
 
     setMeshDataNew(vertices, indices) {
-        this.props.meshData = MeshData.createMeshData(this.gl, vertices, indices);
+        this.props.meshData = MeshData.createMeshData(this.scene, this.gl, vertices, indices);
     }
 
     setMeshDataLink(meshData) {

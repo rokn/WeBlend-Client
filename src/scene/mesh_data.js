@@ -1,5 +1,5 @@
 import {calculateNormal, countSmaller, max, min} from 'utils';
-import {AABB} from 'scene';
+import {AABB, STORE_MESH_DATA} from 'scene';
 import {vec3} from 'gl-matrix'
 import {SELECTED_COLOR} from 'scene/const';
 
@@ -314,8 +314,19 @@ export class MeshData {
         return new AABB(minPoint, maxPoint);
     }
 
-    static createMeshData(...meshDataArgs) {
+    serialize() {
+        return {
+            id: this.id,
+            vertices: this.vertices,
+            indices: this.indices,
+            color: this.color,
+        }
+    }
+
+    static createMeshData(scene, ...meshDataArgs) {
         const newMeshData = new MeshData(...meshDataArgs);
+        const meshDataStore = scene.store.getArray(STORE_MESH_DATA);
+        meshDataStore.push(newMeshData);
         return new MeshDataLink(newMeshData);
     }
 }
