@@ -49,10 +49,12 @@ export class GrabTool extends Tool {
 
             selected[i].transform.setPosition(newPos);
         }
+        console.log("Grab Tool Move");
     }
 
     activate(event, onDeactivate) {
         super.activate(event, onDeactivate);
+        console.log("Grab Tool");
 
         this.activeAxes = [true, true, true]
 
@@ -78,6 +80,7 @@ export class GrabTool extends Tool {
 
     handleStop(event) {
         this.deactivate();
+        console.log("Grab Tool stop");
     }
 
     handleCancel(event) {

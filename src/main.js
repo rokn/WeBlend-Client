@@ -1,28 +1,55 @@
 import 'gl-matrix-extends'
-import { Viewport } from 'editor'
-import { Node, Camera } from 'scene'
-import {GeometryNode} from 'scene/nodes';
-import {App} from 'ui';
+import {Viewport} from 'editor'
+import {Camera} from 'scene'
 
 import './css/main.css'
-import {createCube} from "editor/objects/cube.js";
-import {Scene} from "scene/scene.js";
+import {Scene} from "scene/scene";
+import {BasicNodeDeserializer, GeometryNodeDeserializer} from 'scene/nodes'
 
-import 'api'
+import {getScene} from "./api";
+import {MeshDataDeserializer} from "./scene/mesh_data";
+import {createCube} from "./editor/objects/cube";
+
+import MicroModal from 'micromodal';
+
+MicroModal.init()
+MicroModal.show('modal-start')
 
 const viewport = new Viewport('mainCanvas')
 
-const scene = new Scene("Test Scene", "Antonio");
-viewport.setScene(scene)
+const defaultScene = () => {
+    const scene = new Scene("Cool cube", "Antonio");
+    viewport.setScene(scene);
+    createCube(scene.root);
+}
+
+document.querySelector('#btn-new-scene').addEventListener('click', _ => {
+    defaultScene();
+});
+
+document.querySelector('#btn-load-scene').addEventListener('click', _ => {
+    getScene(document.querySelector('#in-scene-id').value)
+        .then(sceneDTO => {
+            const deserializers = [];
+            deserializers.push(new GeometryNodeDeserializer());
+            deserializers.push(new BasicNodeDeserializer());
+            const plugins = [];
+            plugins.push(new MeshDataDeserializer());
+            const scene = Scene.fromDTO(sceneDTO, deserializers, plugins);
+            viewport.setScene(scene);
+        })
+        .catch(err => {
+            console.log(err);
+            defaultScene();
+        });
+});
+
 
 const camera = new Camera('Viewport Camera', [0,-5,8], [0,0,0], [0,0,1], null);
 camera.setAsPerspective(30, viewport.width, viewport.height, 0.1, 40000);
 camera.transform.setRotation([0,0,180]);
 viewport.setCamera(camera);
 
-// const app = new App(viewport.store);
-
-createCube(scene.root);
 
 function drawFrame() {
     viewport.draw();

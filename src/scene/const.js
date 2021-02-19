@@ -4,6 +4,10 @@ export const STORE_GL = 'store-gl';
 
 export const STORE_MESH_DATA = 'store-mesh-data';
 
+export const NODE_PROP_TYPE = 'node-type';
+
+export const NODE_TYPE_BASIC = 'node-basic';
+export const NODE_TYPE_GEOM = 'node-geom';
 
 export const EPS = 0.0001;
 

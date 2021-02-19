@@ -98,7 +98,7 @@ export class TouchCommand extends Command {
 export class DeactivateCommand extends KeyCommand {
     constructor(cb = null) {
         super(KEY_DOWN, 'Escape', 'deactivate', (ev) => {
-            cb(ev)
+            if (cb) cb(ev)
             this.tool.deactivate()
         });
     }

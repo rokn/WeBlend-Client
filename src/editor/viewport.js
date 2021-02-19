@@ -23,7 +23,7 @@ import {
     SelectObjectAction, SelectVertexAction,
     SHIFT_MOD, SubdivideAllAction, ToggleEditModeAction,
     ToolChooser, ZoomInAction, ZoomOutAction,
-    ZoomTool, TouchCommand, SerializeAction,
+    ZoomTool, TouchCommand, OnlineSaveAction, PrintSceneAction,
 } from 'editor/tools';
 import {CameraControl} from 'editor/camera_control'
 import { vShader as vShader, outlineVShader } from './shaders.vert.js';
@@ -160,7 +160,7 @@ export class Viewport {
 
         this._drawAxisLines();
 
-        if (this.scene.root) {
+        if (this.scene) {
             let options = {
                 drawOutline: true,
                 editMode: this.editMode,
@@ -272,7 +272,12 @@ export class Viewport {
 
         toolCommands.push({
             command: new KeyCommand(KEY_DOWN, 'KeyS', null, null, ALT_MOD),
-            tool: new SerializeAction(),
+            tool: new OnlineSaveAction(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'KeyP', null, null, NO_MOD),
+            tool: new PrintSceneAction(),
         });
 
         const panTool = new PanTool();
@@ -384,6 +389,9 @@ export class Viewport {
         this.lastMousePosition = vec2.create();
 
         const handleEvent = (event) => {
+            if(!this.scene) {
+                return;
+            }
             event.viewport = this;
             event.scene = this.scene; // For easier access
             event.store = this.scene.localStore; // For easier access

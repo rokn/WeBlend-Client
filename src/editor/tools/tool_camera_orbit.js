@@ -24,7 +24,7 @@ export class CameraOrbitTool extends Tool{
         this.addCommand(new TouchCommand(TOUCH_END, 'end', (ev) => this.handleStop(ev)));
         this.addCommand(new MouseCommand(MOUSE_UP, MOUSEB_SCROLL, 'stop', (ev) => this.handleStop(ev)));
         this.addCommand(new MouseCommand(MOUSE_UP, MOUSEB_PRIMARY, 'stop-alt', (ev) => this.handleStop(ev)));
-            this.addCommand(new DeactivateCommand());
+        this.addCommand(new DeactivateCommand());
 
         this.startXRot = 0;
         this.startZRot = 0;

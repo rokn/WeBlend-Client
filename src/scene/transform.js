@@ -1,4 +1,4 @@
-import {vec3,mat4,quat} from 'gl-matrix';
+import {mat4, quat, vec3} from 'gl-matrix';
 import {Observable} from 'scene/observable';
 
 export class Transform extends Observable {
@@ -40,6 +40,15 @@ export class Transform extends Observable {
         this.notify('origin');
     }
 
+    copyTransform(other) {
+        vec3.copy(this.origin, other.origin);
+        vec3.copy(this.position, other.position);
+        vec3.copy(this.rotation, other.rotation);
+        vec3.copy(this.scale, other.scale);
+        quat.copy(this._rotation, other._rotation);
+        this.notify('all');
+    }
+
     toNodeMatrix(modelMatrix) {
         return mat4.fromRotationTranslationScaleOrigin(
             modelMatrix,
@@ -57,5 +66,18 @@ export class Transform extends Observable {
             scale: this.scale.serialize(),
             origin: this.origin.serialize(),
         }
+    }
+
+    static fromDTO(transformDTO) {
+        if(!transformDTO) {
+            return new Transform()
+        }
+
+        return new Transform(
+            transformDTO.position,
+            transformDTO.rotation,
+            transformDTO.scale,
+            transformDTO.origin,
+        );
     }
 }

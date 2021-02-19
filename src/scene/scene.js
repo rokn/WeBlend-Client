@@ -3,7 +3,7 @@ import {GeometryNode, Node} from "./nodes";
 import {saveFile} from "../utils.js";
 
 export class Scene {
-    constructor(name, author, createdDate=null) {
+    constructor(name, author, createdDate = null) {
         this.name = name;
         this.author = author;
         this.createdDate = createdDate ? createdDate : new Date();
@@ -41,7 +41,7 @@ export class Scene {
         saveFile(JSON.stringify(saveRoot, null, 2), 'dump.json', 'application/json');
     }
 
-    traverseNodesSave (sceneObj, parentNew) {
+    traverseNodesSave(sceneObj, parentNew) {
         for (const child of sceneObj.children) {
             const newSaved = this.newSaveObject(child.name);
             parentNew.children.push(newSaved);
@@ -70,5 +70,44 @@ export class Scene {
             root: this._root.serialize(),
             store: this.store.serialize(),
         }
+    }
+
+    static fromDTO(dto, nodeDeserializers, deserializePlugins) {
+        const scene = new Scene(dto.name, dto.author, dto.createdDate)
+
+        for (const plugin of deserializePlugins) {
+            plugin.deserialize(dto, scene);
+        }
+
+        const deserializeDFS = (dtoNode, parent = null) => {
+            let node = null;
+            for (const nodeDeserializer of nodeDeserializers) {
+                node = nodeDeserializer.deserialize(dtoNode, parent, scene);
+                if (node) {
+                    break;
+                }
+            }
+
+            if (!node) {
+                console.warn("No serializer found for node:");
+                console.warn(dtoNode);
+                return null;
+            }
+
+            for (const child of dtoNode.children) {
+                deserializeDFS(child, node);
+            }
+
+            return node;
+        }
+
+        let deserializedRoot = deserializeDFS(dto.root);
+        if (!deserializedRoot) {
+            console.warn("No root found in scene");
+        } else {
+            scene._root = deserializedRoot;
+        }
+
+        return scene;
     }
 }

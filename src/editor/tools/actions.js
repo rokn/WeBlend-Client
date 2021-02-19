@@ -128,14 +128,22 @@ export class DeleteSelectedVerticesAction extends Action {
     }
 }
 
-export class SerializeAction extends Action {
+export class OnlineSaveAction extends Action {
     constructor() {
-        super("Serialize");
+        super("Online Save");
     }
 
     onActivate(event) {
-        const serialized = event.scene.serialize();
-        console.log(JSON.stringify(serialized));
-        saveScene(serialized);
+        saveScene(event.scene.serialize());
+    }
+}
+
+export class PrintSceneAction extends Action {
+    constructor() {
+        super("Print Scene");
+    }
+
+    onActivate(event) {
+        console.log(event.scene.serialize());
     }
 }

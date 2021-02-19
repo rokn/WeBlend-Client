@@ -1,12 +1,23 @@
-import {Node} from 'scene/nodes';
-import {MeshData, MeshDataLink} from 'scene/mesh_data';
-import {STORE_GL} from 'scene';
+import {BasicNodeDeserializer, Node} from 'scene/nodes';
+import {MeshData, MeshDataLink, MESSAGE_MESH_DATA_BUFFERS, MESSAGE_MESH_DATA_SELECTION} from 'scene/mesh_data';
+import {NODE_TYPE_GEOM, STORE_GL, STORE_MESH_DATA} from 'scene/const';
 
 export class GeometryNode extends Node {
     constructor(name, parent) {
-        super(name, parent);
+        super(name, parent, NODE_TYPE_GEOM);
 
         this.props.meshData = null;
+
+        this._geomBuf = null;
+        this._verticesBuffer = null;
+        if(!this.gl) {
+            this.scene.localStore.observe(STORE_GL, (_, gl) => {
+                if (!this._geomBuf)
+                    this.initializeBuffers();
+            })
+        } else {
+            this.initializeBuffers();
+        }
     }
 
     get gl() {
@@ -14,15 +25,46 @@ export class GeometryNode extends Node {
     }
 
     get meshData() {
-        return this.props.meshData.instance;
+        return this.props.meshData?.instance;
+    }
+
+    initializeBuffers() {
+        this._geomBuf = this.gl.createBuffer();
+        this._verticesBuffer = this.gl.createBuffer();
+
+        if(this.meshData)
+            this._updateBuffers();
+    }
+
+    _updateBuffers() {
+        this._updateMainBuffer();
+        this._updateVerticesBuffer();
+    }
+
+    _registerMeshData() {
+        if (!this.meshData) return;
+
+        this._updateBuffers();
+        this.meshData.subscribe((_, key) => {
+            switch (key) {
+                case MESSAGE_MESH_DATA_BUFFERS:
+                    this._updateBuffers();
+                    break;
+                case MESSAGE_MESH_DATA_SELECTION:
+                    this._updateVerticesBuffer();
+                    break;
+            }
+        });
     }
 
     setMeshDataNew(vertices, indices) {
-        this.props.meshData = MeshData.createMeshData(this.scene, this.gl, vertices, indices);
+        this.props.meshData = MeshData.createMeshDataWithLink(this.scene, vertices, indices);
+        this._registerMeshData();
     }
 
     setMeshDataLink(meshData) {
         this.props.meshData = new MeshDataLink(meshData);
+        this._registerMeshData();
     }
 
     getAABB() {
@@ -48,7 +90,7 @@ export class GeometryNode extends Node {
 
                 const aXYZ = gl.getParamLocation('aXYZ');
 
-                gl.bindBuffer(gl.ARRAY_BUFFER, meshData.geometryBuffer);
+                gl.bindBuffer(gl.ARRAY_BUFFER, this._geomBuf);
                 gl.enableVertexAttribArray(aXYZ);
                 gl.vertexAttribPointer(aXYZ,3,gl.FLOAT,false,6*gl.FLOATS,0*gl.FLOATS);
 
@@ -67,7 +109,7 @@ export class GeometryNode extends Node {
 
                 gl.vertexAttrib3fv(aColor, meshData.color);
 
-                gl.bindBuffer(gl.ARRAY_BUFFER, meshData.geometryBuffer);
+                gl.bindBuffer(gl.ARRAY_BUFFER, this._geomBuf);
                 gl.enableVertexAttribArray(aXYZ);
                 gl.vertexAttribPointer(aXYZ,3,gl.FLOAT,false,6*gl.FLOATS,0*gl.FLOATS);
 
@@ -90,7 +132,7 @@ export class GeometryNode extends Node {
                     for (let i=0; i<meshData.faceCount; i++)
                         gl.drawArrays(gl.LINE_LOOP, i*3, 3);
 
-                    gl.bindBuffer(gl.ARRAY_BUFFER, meshData.verticesBuffer);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, this._verticesBuffer);
                     gl.vertexAttribPointer(aXYZ,3,gl.FLOAT,false,6*gl.FLOATS,0*gl.FLOATS);
                     gl.enableVertexAttribArray(aColor);
                     gl.vertexAttribPointer(aColor,3,gl.FLOAT,false,6*gl.FLOATS,3*gl.FLOATS);
@@ -108,4 +150,47 @@ export class GeometryNode extends Node {
 
         super.draw();
     }
+
+    _updateMainBuffer() {
+        if(!this.meshData || !this.gl) return;
+
+        const gl = this.gl;
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._geomBuf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.meshData.geometryBuffer), gl.DYNAMIC_DRAW);
+    }
+
+    _updateVerticesBuffer() {
+        if(!this.meshData || !this.gl) return;
+
+        const gl = this.gl;
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._verticesBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.meshData.verticesBuffer), gl.DYNAMIC_DRAW);
+    }
+}
+
+export class GeometryNodeDeserializer extends BasicNodeDeserializer {
+    constructor() {
+        super(NODE_TYPE_GEOM)
+    }
+
+    deserialize(dtoNode, parent, scene) {
+        if (!this.isSameType(dtoNode)) return null;
+
+        const node = new GeometryNode(dtoNode.name, parent);
+        this.populate(node, dtoNode, scene);
+        return node;
+    }
+
+    populate(nodeObj, dtoNode, scene) {
+        super.populate(nodeObj, dtoNode, scene);
+        if(dtoNode.props.meshData === undefined){
+            return;
+        }
+
+        const meshData = scene.store.getArray(STORE_MESH_DATA)?.find(md => md.id === dtoNode.props.meshData);
+        if(meshData) {
+            nodeObj.setMeshDataLink(meshData);
+        }
+    }
+
 }

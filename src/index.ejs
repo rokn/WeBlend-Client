@@ -39,5 +39,24 @@
         </div>
     </div>
 
+    <div class="modal micromodal-slide" id="modal-start" aria-hidden="true">
+        <div class="modal__overlay" tabindex="-1">
+            <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-start-title">
+                <header class="modal__header">
+                    <h2 class="modal__title" id="modal-start-title">
+                        Choose Scene
+                    </h2>
+                </header>
+                <main class="modal__content" id="modal-start-content">
+                    <label>Scene Id</label>
+                    <input type="text" id="in-scene-id">
+                </main>
+                <footer class="modal__footer">
+                    <button class="modal__btn modal__btn-primary" id="btn-load-scene" data-micromodal-close>Load</button>
+                    <button class="modal__btn" id="btn-new-scene" data-micromodal-close aria-label="Create a new default scene">New Scene</button>
+                </footer>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

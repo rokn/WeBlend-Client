@@ -2,40 +2,28 @@ import {calculateNormal, countSmaller, max, min} from 'utils';
 import {AABB, STORE_MESH_DATA} from 'scene';
 import {vec3} from 'gl-matrix'
 import {SELECTED_COLOR} from 'scene/const';
+import {Observable} from "./observable";
 
 let MESH_DATA_COUNTER = 0;
 
-export class MeshData {
-    constructor (gl, vertices, indices) {
+export const MESSAGE_MESH_DATA_BUFFERS = "message-mesh-data-buffers";
+export const MESSAGE_MESH_DATA_SELECTION = "message-mesh-data-selection";
+
+export class MeshData extends Observable {
+    constructor (vertices, indices, color=[1,0,0]) {
+        super();
+
         this.vertices = vertices;
         this.indices = indices;
-        this.color = [1, 0, 0]; // TODO: WTF NO
+        this.color = color;
         this._selectedVertices = new Set();
         this._generateBuffers();
-        this.gl = gl;
-
-        this._geomBuf = gl.createBuffer();
-        this._verticesBuffer = gl.createBuffer();
 
         this.id = MESH_DATA_COUNTER++;
-
-        this._updateMainBuffer();
-        this._updateVerticesBuffer();
 
         this.refCount = 0;
     }
 
-    _updateMainBuffer() {
-        const gl = this.gl;
-        gl.bindBuffer(gl.ARRAY_BUFFER, this._geomBuf);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this._buffer), gl.DYNAMIC_DRAW);
-    }
-
-    _updateVerticesBuffer() {
-        const gl = this.gl;
-        gl.bindBuffer(gl.ARRAY_BUFFER, this._verticesBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this._vbuffer), gl.DYNAMIC_DRAW);
-    }
 
     _setVertexColor(idx, color) {
         this._vbuffer[idx*6+3] = color[0];
@@ -51,7 +39,7 @@ export class MeshData {
             this._setVertexColor(idx, SELECTED_COLOR);
             this._selectedVertices.add(idx);
         }
-        this._updateVerticesBuffer();
+        this.notify(MESSAGE_MESH_DATA_SELECTION);
     }
 
     getSelectedVertices() {
@@ -64,7 +52,7 @@ export class MeshData {
         }
 
         this._selectedVertices.clear();
-        this._updateVerticesBuffer();
+        this.notify(MESSAGE_MESH_DATA_SELECTION);
     }
 
     isSelected(idx) {
@@ -80,8 +68,7 @@ export class MeshData {
 
     updateBuffers() {
         this._generateBuffers();
-        this._updateMainBuffer();
-        this._updateVerticesBuffer();
+        this.notify(MESSAGE_MESH_DATA_BUFFERS);
     }
 
     addUser() {
@@ -94,11 +81,11 @@ export class MeshData {
     }
 
     get geometryBuffer() {
-        return this._geomBuf;
+        return this._buffer;
     }
 
     get verticesBuffer() {
-        return this._verticesBuffer;
+        return this._vbuffer;
     }
 
     get vertexCount() {
@@ -246,8 +233,6 @@ export class MeshData {
         }
 
         this.deleteFaces(faceIndices, false);
-
-        console.log(this.vertexCount);
     }
 
     addFace(indices) {
@@ -323,11 +308,16 @@ export class MeshData {
         }
     }
 
+    static createMeshDataWithLink(scene, ...meshDataArgs) {
+        const meshData = MeshData.createMeshData(scene, ...meshDataArgs)
+        return new MeshDataLink(meshData);
+    }
+
     static createMeshData(scene, ...meshDataArgs) {
         const newMeshData = new MeshData(...meshDataArgs);
         const meshDataStore = scene.store.getArray(STORE_MESH_DATA);
         meshDataStore.push(newMeshData);
-        return new MeshDataLink(newMeshData);
+        return newMeshData;
     }
 }
 
@@ -354,3 +344,22 @@ export class MeshDataLink {
     }
 }
 
+export class MeshDataDeserializer {
+    deserialize(dto, scene) {
+        if(!dto.store[STORE_MESH_DATA]) return;
+
+        let maxId = 0;
+        for (const meshDataDto of dto.store[STORE_MESH_DATA]) {
+            const newMD = MeshData.createMeshData(
+                scene,
+                meshDataDto.vertices,
+                meshDataDto.indices,
+                meshDataDto.color,
+            )
+            newMD.id = meshDataDto.id;
+            maxId = max(newMD.id, maxId);
+        }
+
+        MESH_DATA_COUNTER = maxId+1;
+    }
+}
