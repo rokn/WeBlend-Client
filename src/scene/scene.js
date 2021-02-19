@@ -11,6 +11,7 @@ export class Scene {
         this._store = new Store();
         this._localStore = new Store();
         this._root.scene = this;
+        this.id = null
     }
 
     get root() {
@@ -74,6 +75,8 @@ export class Scene {
 
     static fromDTO(dto, nodeDeserializers, deserializePlugins) {
         const scene = new Scene(dto.name, dto.author, dto.createdDate)
+
+        scene.id = dto._id;
 
         for (const plugin of deserializePlugins) {
             plugin.deserialize(dto, scene);
