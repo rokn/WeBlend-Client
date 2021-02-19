@@ -37,6 +37,34 @@ export class Node {
         return this._selected;
     }
 
+    delete() {
+        if (!this.parent) {
+            console.error("Trying to delete root node!")
+            return;
+        }
+
+        this.internalDestroy();
+
+        this.parent.removeChild(this.id);
+
+        for (const child of this.children) {
+            child.parent = this.parent;
+        }
+    }
+
+    internalDestroy() {
+        //nop
+    }
+
+    removeChild(id) {
+        const childIdx = this.children.findIndex(child => child.id === id);
+        if (childIdx < 0) {
+            return;
+        }
+
+        this.children.splice(childIdx, 1);
+    }
+
     updateTransform(newTransform) {
         this.transform.copyTransform(newTransform);
     }
@@ -70,7 +98,6 @@ export class Node {
     }
 
     _updateNodeMatrix() {
-        console.log("updating node matrix")
         this.transform.toNodeMatrix(this._nodeMatrix);
     }
 

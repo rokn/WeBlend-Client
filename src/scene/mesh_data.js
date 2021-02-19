@@ -75,9 +75,16 @@ export class MeshData extends Observable {
         this.refCount++;
     }
 
-    removeUser() {
-        //TODO: Cleanup
+    removeUser(scene) {
         this.refCount--;
+
+        if(this.refCount <= 0) {
+            const meshDataStore = scene.store.getArray(STORE_MESH_DATA);
+            const idx = meshDataStore.findIndex(md => md.id === this.id);
+            if (idx >= 0) {
+                meshDataStore.splice(idx, 1)
+            }
+        }
     }
 
     get geometryBuffer() {
@@ -334,8 +341,8 @@ export class MeshDataLink {
         return this._instance;
     }
 
-    destroy() {
-        this._instance.removeUser();
+    destroy(scene) {
+        this._instance.removeUser(scene);
     }
 
     serialize() {

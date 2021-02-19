@@ -166,6 +166,10 @@ export class GeometryNode extends Node {
         gl.bindBuffer(gl.ARRAY_BUFFER, this._verticesBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.meshData.verticesBuffer), gl.DYNAMIC_DRAW);
     }
+
+    internalDestroy() {
+        this.props.meshData?.destroy(this.scene)
+    }
 }
 
 export class GeometryNodeDeserializer extends BasicNodeDeserializer {

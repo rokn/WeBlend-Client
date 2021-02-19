@@ -23,7 +23,7 @@ import {
     SelectObjectAction, SelectVertexAction,
     SHIFT_MOD, SubdivideAllAction, ToggleEditModeAction,
     ToolChooser, ZoomInAction, ZoomOutAction,
-    ZoomTool, TouchCommand, OnlineSaveAction, PrintSceneAction,
+    ZoomTool, TouchCommand, OnlineSaveAction, PrintSceneAction, DeleteObjectsAction,
 } from 'editor/tools';
 import {CameraControl} from 'editor/camera_control'
 import { vShader as vShader, outlineVShader } from './shaders.vert.js';
@@ -380,6 +380,11 @@ export class Viewport {
         toolCommands.push({
             command: new KeyCommand(KEY_DOWN, 'Delete', null, null, null, onlyEdit),
             tool: new DeleteSelectedVerticesAction(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'Delete', null, null, null, noEdit),
+            tool: new DeleteObjectsAction(),
         });
 
         this.mainTool = new ToolChooser(toolCommands);

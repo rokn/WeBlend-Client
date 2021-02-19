@@ -149,3 +149,18 @@ export class PrintSceneAction extends Action {
         console.log(event.scene.serialize());
     }
 }
+
+export class DeleteObjectsAction extends Action {
+    constructor() {
+        super("Delete Objects");
+    }
+
+    onActivate(event) {
+        const selected = event.store.getArray(STORE_SELECTED_NODES);
+        for (const selectedNode of selected) {
+            selectedNode.delete();
+        }
+
+        event.store.clear(STORE_SELECTED_NODES)
+    }
+}
