@@ -8,9 +8,9 @@ import {BasicNodeDeserializer, GeometryNodeDeserializer} from 'scene/nodes'
 
 import {getScene} from "./api";
 import {MeshDataDeserializer} from "./scene/mesh_data";
-import {createCube} from "./editor/objects/cube";
 
 import MicroModal from 'micromodal';
+import {createFox} from "./editor/objects/fox.js";
 
 MicroModal.init()
 MicroModal.show('modal-start')
@@ -20,7 +20,7 @@ const viewport = new Viewport('mainCanvas')
 const defaultScene = () => {
     const scene = new Scene("Cool cube", "Antonio");
     viewport.setScene(scene);
-    createCube(scene.root);
+    createFox(scene.root);
 }
 
 document.querySelector('#btn-new-scene').addEventListener('click', _ => {
@@ -45,9 +45,9 @@ document.querySelector('#btn-load-scene').addEventListener('click', _ => {
 });
 
 
-const camera = new Camera('Viewport Camera', [0,-5,8], [0,0,0], [0,0,1], null);
+const camera = new Camera('Viewport Camera', [0,0,0], [0,0,0], [0,0,1], null);
 camera.setAsPerspective(30, viewport.width, viewport.height, 0.1, 40000);
-camera.transform.setRotation([0,0,180]);
+camera.transform.setRotation([50,0,135]);
 viewport.setCamera(camera);
 
 
