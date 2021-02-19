@@ -131,8 +131,7 @@ export class MeshData extends Observable {
             let willRemove = false;
             for (let j = 0; j < faceIndices.length; j++) {
                 if (indices.has(faceIndices[j])) {
-                    //TODO: fix this please
-                    facesToRemove.push(i-facesToRemove.length);
+                    facesToRemove.push(i);
                     willRemove = true;
                     break;
                 }

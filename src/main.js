@@ -11,6 +11,8 @@ import {MeshDataDeserializer} from "./scene/mesh_data";
 
 import MicroModal from 'micromodal';
 import {createFox} from "./editor/objects/fox.js";
+import {createDragon} from "./editor/objects/dragon.js";
+import {createCube} from "./editor/objects/cube.js";
 
 MicroModal.init()
 MicroModal.show('modal-start')
@@ -20,7 +22,9 @@ const viewport = new Viewport('mainCanvas')
 const defaultScene = () => {
     const scene = new Scene("Cool cube", "Antonio");
     viewport.setScene(scene);
+    // createDragon(scene.root);
     createFox(scene.root);
+    // createCube(scene.root);
 }
 
 document.querySelector('#btn-new-scene').addEventListener('click', _ => {
