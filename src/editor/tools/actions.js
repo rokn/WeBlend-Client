@@ -164,3 +164,23 @@ export class DeleteObjectsAction extends Action {
         event.store.clear(STORE_SELECTED_NODES)
     }
 }
+
+export class UndoAction extends Action {
+    constructor() {
+        super("Undo");
+    }
+
+    onActivate(event) {
+        event.scene.undo();
+    }
+}
+
+export class RedoAction extends Action {
+    constructor() {
+        super("Redo");
+    }
+
+    onActivate(event) {
+        event.scene.redo();
+    }
+}

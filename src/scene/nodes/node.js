@@ -85,6 +85,11 @@ export class Node {
     addChild(childNode) {
         this.children.push(childNode);
         childNode.scene = this.scene;
+        childNode.onParentUpdate();
+    }
+
+    onParentUpdate() {
+        //nop
     }
 
     draw(options) {

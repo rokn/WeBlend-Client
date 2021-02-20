@@ -10,13 +10,9 @@ export class GeometryNode extends Node {
 
         this._geomBuf = null;
         this._verticesBuffer = null;
-        if(!this.gl) {
-            this.scene.localStore.observe(STORE_GL, (_, gl) => {
-                if (!this._geomBuf)
-                    this.initializeBuffers();
-            })
-        } else {
-            this.initializeBuffers();
+
+        if (this.parent) {
+            this.onParentUpdate()
         }
     }
 
@@ -26,6 +22,17 @@ export class GeometryNode extends Node {
 
     get meshData() {
         return this.props.meshData?.instance;
+    }
+
+    onParentUpdate() {
+        if(!this.gl) {
+            this.scene.localStore.observe(STORE_GL, (_, gl) => {
+                if (!this._geomBuf)
+                    this.initializeBuffers();
+            })
+        } else {
+            this.initializeBuffers();
+        }
     }
 
     initializeBuffers() {

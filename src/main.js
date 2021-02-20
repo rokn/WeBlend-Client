@@ -14,10 +14,15 @@ import {createFox} from "./editor/objects/fox.js";
 import {createDragon} from "./editor/objects/dragon.js";
 import {createCube} from "./editor/objects/cube.js";
 
+import {initializeSocket} from "./socket-connection/initialize.js";
+import {COMMAND_TYPE_UPDATE_TRANSFORM, UpdateTransformCommand} from "./scene/commands/update_transform_command.js";
+
 MicroModal.init()
 MicroModal.show('modal-start')
 
 const viewport = new Viewport('mainCanvas')
+
+const socket = initializeSocket();
 
 const defaultScene = () => {
     const scene = new Scene("Cool cube", "Antonio");
@@ -41,13 +46,15 @@ document.querySelector('#btn-load-scene').addEventListener('click', _ => {
             plugins.push(new MeshDataDeserializer());
             const scene = Scene.fromDTO(sceneDTO, deserializers, plugins);
             viewport.setScene(scene);
+
+            scene.setSocketConnection(socket);
+
         })
         .catch(err => {
             console.log(err);
             defaultScene();
         });
 });
-
 
 const camera = new Camera('Viewport Camera', [0,0,0], [0,0,0], [0,0,1], null);
 camera.setAsPerspective(30, viewport.width, viewport.height, 0.1, 40000);

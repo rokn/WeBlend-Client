@@ -23,7 +23,7 @@ import {
     SelectObjectAction, SelectVertexAction,
     SHIFT_MOD, SubdivideAllAction, ToggleEditModeAction,
     ToolChooser, ZoomInAction, ZoomOutAction,
-    ZoomTool, TouchCommand, OnlineSaveAction, PrintSceneAction, DeleteObjectsAction,
+    ZoomTool, TouchCommand, OnlineSaveAction, PrintSceneAction, DeleteObjectsAction, UndoAction, RedoAction,
 } from 'editor/tools';
 import {CameraControl} from 'editor/camera_control'
 import { vShader as vShader, outlineVShader } from './shaders.vert.js';
@@ -363,7 +363,7 @@ export class Viewport {
         });
 
         toolCommands.push({
-            command: new KeyCommand(KEY_DOWN, 'KeyA', null, null, SHIFT_MOD, noEdit),
+            command: new KeyCommand(KEY_DOWN, 'KeyA', null, null, null, noEdit),
             tool: new AddObjectTool(),
         });
 
@@ -385,6 +385,16 @@ export class Viewport {
         toolCommands.push({
             command: new KeyCommand(KEY_DOWN, 'Delete', null, null, null, noEdit),
             tool: new DeleteObjectsAction(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'KeyZ', null, null, CTRL_MOD),
+            tool: new UndoAction(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'KeyZ', null, null, new Modifiers(true, true)),
+            tool: new RedoAction(),
         });
 
         this.mainTool = new ToolChooser(toolCommands);
