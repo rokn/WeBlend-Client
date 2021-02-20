@@ -1,4 +1,4 @@
-import {calculateNormal, countSmaller, max, min} from 'utils';
+import {calculateNormal, countSmaller, max, min, randomColor} from 'utils';
 import {AABB, STORE_MESH_DATA} from 'scene';
 import {vec3} from 'gl-matrix'
 import {SELECTED_COLOR} from 'scene/const';
@@ -15,7 +15,7 @@ export class MeshData extends Observable {
 
         this.vertices = vertices;
         this.indices = indices;
-        this.color = color;
+        this.color = randomColor();
         this._selectedVertices = new Set();
         this._generateBuffers();
 

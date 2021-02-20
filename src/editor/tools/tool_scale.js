@@ -40,7 +40,7 @@ export class ScaleTool extends Tool {
                 let newScale = vec3.clone(this.startScales[i]);
                 for (let axis = 0; axis < this.activeAxes.length; axis++) {
                     if (this.activeAxes[axis]) {
-                        newScale[axis] += diff.x*dist/1300;
+                        newScale[axis] += diff.x*dist/1300*this.startScales[i][axis];
                     }
                 }
 

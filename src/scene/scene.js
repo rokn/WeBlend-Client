@@ -2,6 +2,7 @@ import {Store} from 'scene/store';
 import {GeometryNode, Node} from "./nodes";
 import {saveFile} from "../utils.js";
 import {COMMAND_TYPE_UPDATE_TRANSFORM, UpdateTransformCommand} from "./commands/update_transform_command.js";
+import {COMMAND_TYPE_UPDATE_SELECTION, UpdateSelectionCommand} from "./commands/selection_command.js";
 
 export class Scene {
     constructor(name, author, createdDate = null) {
@@ -178,6 +179,9 @@ export class Scene {
             switch(command.type) {
                 case COMMAND_TYPE_UPDATE_TRANSFORM:
                     sceneCommand = UpdateTransformCommand.fromDTO(command);
+                    break;
+                case COMMAND_TYPE_UPDATE_SELECTION:
+                    sceneCommand = UpdateSelectionCommand.fromDTO(command);
                     break;
             }
 

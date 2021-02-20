@@ -1,6 +1,7 @@
 import {BasicNodeDeserializer, Node} from 'scene/nodes';
 import {MeshData, MeshDataLink, MESSAGE_MESH_DATA_BUFFERS, MESSAGE_MESH_DATA_SELECTION} from 'scene/mesh_data';
 import {NODE_TYPE_GEOM, STORE_GL, STORE_MESH_DATA} from 'scene/const';
+import {randomColor} from "../../utils.js";
 
 export class GeometryNode extends Node {
     constructor(name, parent) {
@@ -115,6 +116,7 @@ export class GeometryNode extends Node {
                 const aColor = gl.getParamLocation('aColor');
 
                 gl.vertexAttrib3fv(aColor, meshData.color);
+                // gl.vertexAttrib3fv(aColor, randomColor());
 
                 gl.bindBuffer(gl.ARRAY_BUFFER, this._geomBuf);
                 gl.enableVertexAttribArray(aXYZ);

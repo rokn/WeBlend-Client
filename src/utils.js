@@ -70,3 +70,13 @@ export function countSmaller(arr, el) {
 
     return count;
 }
+
+export function randomColor() {
+    const arr = [
+        [82, 53, 212],
+        [38, 191, 133],
+        [189, 75, 0],
+    ];
+    return arr[Math.floor(Math.random() * arr.length)].map(el => el/255);
+}
+

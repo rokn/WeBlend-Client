@@ -1,6 +1,6 @@
 import {io} from "socket.io-client";
 
-const SOCKET_URL = '192.168.0.100:3000';
+const SOCKET_URL = '37.157.168.223:3000';
 
 export const initializeSocket = () => {
     const socket = io(SOCKET_URL);
