@@ -47,7 +47,9 @@ document.querySelector('#btn-load-scene').addEventListener('click', _ => {
             const scene = Scene.fromDTO(sceneDTO, deserializers, plugins);
             viewport.setScene(scene);
 
-            scene.setSocketConnection(socket);
+            const username = document.querySelector('#in-username').value;
+            const userListUl = document.querySelector('#userListUl');
+            scene.setSocketConnection(socket, username, userListUl);
 
         })
         .catch(err => {

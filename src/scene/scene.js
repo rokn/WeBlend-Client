@@ -168,10 +168,30 @@ export class Scene {
         return scene;
     }
 
-    setSocketConnection(socket) {
+    setSocketConnection(socket, username, userListUl) {
         this.socket = socket;
 
-        socket.emit('open scene', {to_scene_id: this.id});
+        socket.emit('open scene', {to_scene_id: this.id, username: username});
+
+        const li = document.createElement('li')
+        li.innerText = username;
+        userListUl.appendChild(li);
+
+        socket.on('open scene', ({username}) => {
+            const li = document.createElement('li')
+            li.innerText = username;
+            userListUl.appendChild(li);
+        });
+
+        socket.on('close scene', ({username}) => {
+            console.log(`${username} left!`);
+            for (let i = 0; i < userListUl.childNodes.length; i++) {
+                if (userListUl.childNodes[i].innerText === username) {
+                    userListUl.removeChild(userListUl.childNodes[i]);
+                    break;
+                }
+            }
+        });
 
         socket.on('command', command => {
             console.log('receiving command');
@@ -189,5 +209,8 @@ export class Scene {
                 sceneCommand.execute(this)
             }
         });
+    }
+
+    setCurrentUser(username) {
     }
 }

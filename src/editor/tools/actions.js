@@ -135,7 +135,10 @@ export class OnlineSaveAction extends Action {
 
     onActivate(event) {
         saveScene(event.scene.serialize())
-            .then(sceneId => event.scene.id = sceneId)
+            .then(sceneId => {
+                event.scene.id = sceneId
+                console.log(event.scene.id);
+            })
             .catch(err => console.error(err));
     }
 }
