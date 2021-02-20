@@ -142,5 +142,6 @@ export class BasicNodeDeserializer {
     populate(nodeObj, dtoNode, scene) {
         nodeObj.updateTransform(Transform.fromDTO(dtoNode.transform));
         nodeObj.scene = scene;
+        nodeObj.id = dtoNode._id;
     }
 }
