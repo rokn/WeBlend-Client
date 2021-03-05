@@ -3,6 +3,9 @@ import {EPS, Ray, STORE_SELECTED_NODES} from 'scene';
 import {vec3} from 'gl-matrix';
 import {createCube} from 'editor/objects/cube';
 import {min} from "../../utils.js";
+import {createFox} from "../objects/fox.js";
+import {createDragon} from "../objects/dragon.js";
+import {AddRemoveObjectsCommand} from "../../scene/commands/add_remove_objects_command.js";
 
 
 export class AddObjectTool extends Action {
@@ -35,7 +38,17 @@ export class AddObjectTool extends Action {
         }
 
         let spawnPosition = r.at(t);
-        const spawned = createCube(event.sceneRoot, {initialPosition: spawnPosition});
+        let spawned = null;
+        if (event.modifiers.ctrl) {
+            spawned = createFox(event.scene.root, {initialPosition: spawnPosition});
+        } else if (event.modifiers.alt) {
+            spawned = createDragon(event.scene.root, {initialPosition: spawnPosition});
+        } else {
+            spawned = createCube(event.scene.root, {initialPosition: spawnPosition});
+        }
+
+        // const command = new AddRemoveObjectsCommand("Add Object", [spawned], event.root.id);
+        // event.scene.addCommand(command);
 
         spawned.select();
         event.store.getArray(STORE_SELECTED_NODES).push(spawned);

@@ -1,6 +1,7 @@
 import {BasicNodeDeserializer, Node} from 'scene/nodes';
 import {MeshData, MeshDataLink, MESSAGE_MESH_DATA_BUFFERS, MESSAGE_MESH_DATA_SELECTION} from 'scene/mesh_data';
 import {NODE_TYPE_GEOM, STORE_GL, STORE_MESH_DATA} from 'scene/const';
+import {randomColor} from "../../utils.js";
 
 export class GeometryNode extends Node {
     constructor(name, parent) {
@@ -10,13 +11,9 @@ export class GeometryNode extends Node {
 
         this._geomBuf = null;
         this._verticesBuffer = null;
-        if(!this.gl) {
-            this.scene.localStore.observe(STORE_GL, (_, gl) => {
-                if (!this._geomBuf)
-                    this.initializeBuffers();
-            })
-        } else {
-            this.initializeBuffers();
+
+        if (this.parent) {
+            this.onParentUpdate()
         }
     }
 
@@ -26,6 +23,17 @@ export class GeometryNode extends Node {
 
     get meshData() {
         return this.props.meshData?.instance;
+    }
+
+    onParentUpdate() {
+        if(!this.gl) {
+            this.scene.localStore.observe(STORE_GL, (_, gl) => {
+                if (!this._geomBuf)
+                    this.initializeBuffers();
+            })
+        } else {
+            this.initializeBuffers();
+        }
     }
 
     initializeBuffers() {
@@ -108,6 +116,7 @@ export class GeometryNode extends Node {
                 const aColor = gl.getParamLocation('aColor');
 
                 gl.vertexAttrib3fv(aColor, meshData.color);
+                // gl.vertexAttrib3fv(aColor, randomColor());
 
                 gl.bindBuffer(gl.ARRAY_BUFFER, this._geomBuf);
                 gl.enableVertexAttribArray(aXYZ);
@@ -165,6 +174,10 @@ export class GeometryNode extends Node {
         const gl = this.gl;
         gl.bindBuffer(gl.ARRAY_BUFFER, this._verticesBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.meshData.verticesBuffer), gl.DYNAMIC_DRAW);
+    }
+
+    internalDestroy() {
+        this.props.meshData?.destroy(this.scene)
     }
 }
 

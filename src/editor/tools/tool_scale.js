@@ -10,6 +10,7 @@ import {
 } from 'editor/tools/tool';
 import {vec2, vec3} from 'gl-matrix';
 import {STORE_SELECTED_NODES} from 'scene/const';
+import {UpdateTransformCommand} from "../../scene/commands/update_transform_command.js";
 
 
 export class ScaleTool extends Tool {
@@ -18,7 +19,7 @@ export class ScaleTool extends Tool {
 
         this.addCommand(new MouseCommand(MOUSE_MOVE, null, 'move', (ev) => this.handleMove(ev)));
         this.addCommand(new MouseCommand(MOUSE_DOWN, MOUSEB_PRIMARY, 'stop', (ev) => this.handleStop(ev)));
-        this.addCommand(new DeactivateCommand((ev) => this.handleCancel(ev)));
+        this.addCommand(new DeactivateCommand((ev) => this.revert(ev)));
         this.addCommand(new KeyCommand(KEY_DOWN, 'KeyX', 'axis-x', (ev) => this.handleAxisChange(ev, 0)));
         this.addCommand(new KeyCommand(KEY_DOWN, 'KeyY', 'axis-y', (ev) => this.handleAxisChange(ev, 1)));
         this.addCommand(new KeyCommand(KEY_DOWN, 'KeyZ', 'axis-z', (ev) => this.handleAxisChange(ev, 2)));
@@ -39,7 +40,7 @@ export class ScaleTool extends Tool {
                 let newScale = vec3.clone(this.startScales[i]);
                 for (let axis = 0; axis < this.activeAxes.length; axis++) {
                     if (this.activeAxes[axis]) {
-                        newScale[axis] += diff.x*dist/1300;
+                        newScale[axis] += diff.x*dist/1300*this.startScales[i][axis];
                     }
                 }
 
@@ -74,10 +75,17 @@ export class ScaleTool extends Tool {
     }
 
     handleStop(event) {
+        const selected = event.store.getArray(STORE_SELECTED_NODES);
+        const node_ids = selected.map(node => node.id);
+        const transforms = selected.map(node => node.transform);
+        const transformCommand = new UpdateTransformCommand("Scale", node_ids, transforms);
+        this.revert(event)
+
+        event.scene.addCommand(transformCommand)
         this.deactivate();
     }
 
-    handleCancel(event) {
+    revert(event) {
         const selected = event.store.getArray(STORE_SELECTED_NODES);
 
         for (let i = 0; i < this.startScales.length; i++) {

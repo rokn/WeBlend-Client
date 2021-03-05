@@ -8,7 +8,7 @@ import {
     MouseCommand,
     Tool
 } from 'editor/tools/tool';
-import {vec2, vec3} from 'gl-matrix';
+import {vec2, vec3, mat4} from 'gl-matrix';
 import {STORE_ACTIVE_NODE, STORE_SELECTED_NODES} from 'scene/const';
 
 
@@ -27,6 +27,7 @@ export class GrabVertexTool extends Tool {
         this.camLocal = null;
         this.dragPos = null;
         this.activeAxes = [true, true, true]
+        this.reverseMatrix = null;
     }
 
     handleMove(event) {
@@ -53,7 +54,7 @@ export class GrabVertexTool extends Tool {
                 }
             }
 
-            newPositions[idx] = newPos;
+            newPositions[idx] = vec3.transformMat4(newPos, newPos, this.reverseMatrix);
         }
 
         meshData.batchUpdateVertices(newPositions);
@@ -70,10 +71,14 @@ export class GrabVertexTool extends Tool {
             return;
         }
 
+        const activeNode = event.store.getObject(STORE_ACTIVE_NODE);
+        const nodeMatrix = activeNode.nodeMatrix;
+        this.reverseMatrix = mat4.invert(mat4.create(), nodeMatrix);
+
         this.startPositions = {};
 
         for (const idx of meshData.getSelectedVertices()) {
-            this.startPositions[idx] = meshData.getVertex(idx);
+            this.startPositions[idx] = vec3.transformMat4(vec3.create(), meshData.getVertex(idx), nodeMatrix);
         }
 
         this.dragPos = vec2.clone(event.mousePosition)

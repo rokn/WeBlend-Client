@@ -135,7 +135,10 @@ export class OnlineSaveAction extends Action {
 
     onActivate(event) {
         saveScene(event.scene.serialize())
-            .then(sceneId => event.scene.id = sceneId)
+            .then(sceneId => {
+                event.scene.id = sceneId
+                console.log(event.scene.id);
+            })
             .catch(err => console.error(err));
     }
 }
@@ -147,5 +150,40 @@ export class PrintSceneAction extends Action {
 
     onActivate(event) {
         console.log(event.scene.serialize());
+    }
+}
+
+export class DeleteObjectsAction extends Action {
+    constructor() {
+        super("Delete Objects");
+    }
+
+    onActivate(event) {
+        const selected = event.store.getArray(STORE_SELECTED_NODES);
+        for (const selectedNode of selected) {
+            selectedNode.delete();
+        }
+
+        event.store.clear(STORE_SELECTED_NODES)
+    }
+}
+
+export class UndoAction extends Action {
+    constructor() {
+        super("Undo");
+    }
+
+    onActivate(event) {
+        event.scene.undo();
+    }
+}
+
+export class RedoAction extends Action {
+    constructor() {
+        super("Redo");
+    }
+
+    onActivate(event) {
+        event.scene.redo();
     }
 }

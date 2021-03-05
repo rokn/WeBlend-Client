@@ -1,6 +1,8 @@
 import {Store} from 'scene/store';
 import {GeometryNode, Node} from "./nodes";
 import {saveFile} from "../utils.js";
+import {COMMAND_TYPE_UPDATE_TRANSFORM, UpdateTransformCommand} from "./commands/update_transform_command.js";
+import {COMMAND_TYPE_UPDATE_SELECTION, UpdateSelectionCommand} from "./commands/selection_command.js";
 
 export class Scene {
     constructor(name, author, createdDate = null) {
@@ -12,6 +14,9 @@ export class Scene {
         this._localStore = new Store();
         this._root.scene = this;
         this.id = null
+
+        this._commands = []
+        this._commandIndex = -1;
     }
 
     get root() {
@@ -24,6 +29,36 @@ export class Scene {
 
     get localStore() {
         return this._localStore;
+    }
+
+    addCommand(command) {
+        command.execute(this);
+
+        this._commandIndex++;
+
+        if (this._commandIndex < this._commands.length) {
+            this._commands.splice(this._commandIndex, this._commands.length - this._commandIndex);
+        }
+
+        this._commands.push(command);
+
+        if(this.socket && !command.localOnly) {
+            this.socket.emit('command', command.serialize());
+        }
+    }
+
+    undo() {
+        if (this._commandIndex >= 0) {
+            this._commands[this._commandIndex].undo(this);
+            this._commandIndex--;
+        }
+    }
+
+    redo() {
+        if (this._commandIndex < this._commands.length-1) {
+            this._commandIndex++;
+            this._commands[this._commandIndex].execute(this);
+        }
     }
 
     newSaveObject(name = null) {
@@ -61,6 +96,25 @@ export class Scene {
         }
 
         return parentNew;
+    }
+
+    findNode(id) {
+        const findDFS = (node) => {
+            if (node.id === id) {
+                return node;
+            }
+
+            for (const child of node.children) {
+                const found = findDFS(child);
+                if (found) {
+                    return found;
+                }
+            }
+
+            return null;
+        }
+
+        return findDFS(this.root);
     }
 
     serialize() {
@@ -112,5 +166,51 @@ export class Scene {
         }
 
         return scene;
+    }
+
+    setSocketConnection(socket, username, userListUl) {
+        this.socket = socket;
+
+        socket.emit('open scene', {to_scene_id: this.id, username: username});
+
+        const li = document.createElement('li')
+        li.innerText = username;
+        userListUl.appendChild(li);
+
+        socket.on('open scene', ({username}) => {
+            const li = document.createElement('li')
+            li.innerText = username;
+            userListUl.appendChild(li);
+        });
+
+        socket.on('close scene', ({username}) => {
+            console.log(`${username} left!`);
+            for (let i = 0; i < userListUl.childNodes.length; i++) {
+                if (userListUl.childNodes[i].innerText === username) {
+                    userListUl.removeChild(userListUl.childNodes[i]);
+                    break;
+                }
+            }
+        });
+
+        socket.on('command', command => {
+            console.log('receiving command');
+            let sceneCommand = null;
+            switch(command.type) {
+                case COMMAND_TYPE_UPDATE_TRANSFORM:
+                    sceneCommand = UpdateTransformCommand.fromDTO(command);
+                    break;
+                case COMMAND_TYPE_UPDATE_SELECTION:
+                    sceneCommand = UpdateSelectionCommand.fromDTO(command);
+                    break;
+            }
+
+            if (sceneCommand) {
+                sceneCommand.execute(this)
+            }
+        });
+    }
+
+    setCurrentUser(username) {
     }
 }

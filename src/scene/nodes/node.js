@@ -37,6 +37,34 @@ export class Node {
         return this._selected;
     }
 
+    delete() {
+        if (!this.parent) {
+            console.error("Trying to delete root node!")
+            return;
+        }
+
+        this.internalDestroy();
+
+        this.parent.removeChild(this.id);
+
+        for (const child of this.children) {
+            child.parent = this.parent;
+        }
+    }
+
+    internalDestroy() {
+        //nop
+    }
+
+    removeChild(id) {
+        const childIdx = this.children.findIndex(child => child.id === id);
+        if (childIdx < 0) {
+            return;
+        }
+
+        this.children.splice(childIdx, 1);
+    }
+
     updateTransform(newTransform) {
         this.transform.copyTransform(newTransform);
     }
@@ -57,6 +85,11 @@ export class Node {
     addChild(childNode) {
         this.children.push(childNode);
         childNode.scene = this.scene;
+        childNode.onParentUpdate();
+    }
+
+    onParentUpdate() {
+        //nop
     }
 
     draw(options) {
@@ -70,7 +103,6 @@ export class Node {
     }
 
     _updateNodeMatrix() {
-        console.log("updating node matrix")
         this.transform.toNodeMatrix(this._nodeMatrix);
     }
 
@@ -110,5 +142,6 @@ export class BasicNodeDeserializer {
     populate(nodeObj, dtoNode, scene) {
         nodeObj.updateTransform(Transform.fromDTO(dtoNode.transform));
         nodeObj.scene = scene;
+        nodeObj.id = dtoNode._id;
     }
 }

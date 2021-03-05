@@ -23,12 +23,12 @@ import {
     SelectObjectAction, SelectVertexAction,
     SHIFT_MOD, SubdivideAllAction, ToggleEditModeAction,
     ToolChooser, ZoomInAction, ZoomOutAction,
-    ZoomTool, TouchCommand, OnlineSaveAction, PrintSceneAction,
+    ZoomTool, TouchCommand, OnlineSaveAction, PrintSceneAction, DeleteObjectsAction, UndoAction, RedoAction,
 } from 'editor/tools';
 import {CameraControl} from 'editor/camera_control'
 import { vShader as vShader, outlineVShader } from './shaders.vert.js';
 import { fShader as fShader, outlineFShader } from './shaders.frag.js';
-import {SELECTED_COLOR, STORE_GL} from 'scene/const';
+import {LOCKED_COLOR, SELECTED_COLOR, STORE_GL, STORE_LOCKED_NODES, STORE_SELECTED_NODES} from 'scene/const';
 
 
 export class Viewport {
@@ -171,7 +171,19 @@ export class Viewport {
                 gl.cullFace(gl.FRONT);
                 this.useProgram(this.outlineProgram);
                 this.cameraControl.updateViewMatrix()
-                this.scene.root.draw(options)
+                const outlineColor = gl.getParamLocation('outlineColor');
+
+                const selected = this.scene.localStore.getArray(STORE_SELECTED_NODES);
+                gl.uniform3fv(outlineColor, SELECTED_COLOR);
+                for (const node of selected) {
+                    node.draw(options);
+                }
+
+                const locked = this.scene.localStore.getArray(STORE_LOCKED_NODES);
+                gl.uniform3fv(outlineColor, LOCKED_COLOR);
+                for (const node of locked) {
+                    node.draw(options);
+                }
             }
 
             options.drawOutline = false;
@@ -363,7 +375,7 @@ export class Viewport {
         });
 
         toolCommands.push({
-            command: new KeyCommand(KEY_DOWN, 'KeyA', null, null, SHIFT_MOD, noEdit),
+            command: new KeyCommand(KEY_DOWN, 'KeyA', null, null, null, noEdit),
             tool: new AddObjectTool(),
         });
 
@@ -380,6 +392,21 @@ export class Viewport {
         toolCommands.push({
             command: new KeyCommand(KEY_DOWN, 'Delete', null, null, null, onlyEdit),
             tool: new DeleteSelectedVerticesAction(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'Delete', null, null, null, noEdit),
+            tool: new DeleteObjectsAction(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'KeyZ', null, null, CTRL_MOD),
+            tool: new UndoAction(),
+        });
+
+        toolCommands.push({
+            command: new KeyCommand(KEY_DOWN, 'KeyZ', null, null, new Modifiers(true, true)),
+            tool: new RedoAction(),
         });
 
         this.mainTool = new ToolChooser(toolCommands);

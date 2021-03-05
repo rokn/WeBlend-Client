@@ -38,6 +38,7 @@
     "micromodal": "^0.4.6",
     "restful.js": "^0.9.6",
     "rivets": "^0.9.6",
+    "socket.io-client": "^3.1.1",
     "vue": "^2.6.12"
   }
 }

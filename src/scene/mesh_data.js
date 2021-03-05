@@ -1,4 +1,4 @@
-import {calculateNormal, countSmaller, max, min} from 'utils';
+import {calculateNormal, countSmaller, max, min, randomColor} from 'utils';
 import {AABB, STORE_MESH_DATA} from 'scene';
 import {vec3} from 'gl-matrix'
 import {SELECTED_COLOR} from 'scene/const';
@@ -15,7 +15,7 @@ export class MeshData extends Observable {
 
         this.vertices = vertices;
         this.indices = indices;
-        this.color = color;
+        this.color = randomColor();
         this._selectedVertices = new Set();
         this._generateBuffers();
 
@@ -75,9 +75,16 @@ export class MeshData extends Observable {
         this.refCount++;
     }
 
-    removeUser() {
-        //TODO: Cleanup
+    removeUser(scene) {
         this.refCount--;
+
+        if(this.refCount <= 0) {
+            const meshDataStore = scene.store.getArray(STORE_MESH_DATA);
+            const idx = meshDataStore.findIndex(md => md.id === this.id);
+            if (idx >= 0) {
+                meshDataStore.splice(idx, 1)
+            }
+        }
     }
 
     get geometryBuffer() {
@@ -131,8 +138,7 @@ export class MeshData extends Observable {
             let willRemove = false;
             for (let j = 0; j < faceIndices.length; j++) {
                 if (indices.has(faceIndices[j])) {
-                    //TODO: fix this please
-                    facesToRemove.push(i-facesToRemove.length);
+                    facesToRemove.push(i);
                     willRemove = true;
                     break;
                 }
@@ -335,8 +341,8 @@ export class MeshDataLink {
         return this._instance;
     }
 
-    destroy() {
-        this._instance.removeUser();
+    destroy(scene) {
+        this._instance.removeUser(scene);
     }
 
     serialize() {

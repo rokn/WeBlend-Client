@@ -38,6 +38,11 @@
             <canvas id="mainCanvas" width="1200" height="600" tabindex="0"></canvas>
         </div>
     </div>
+    <div>
+        <h4>Users</h4>
+        <ul id="userListUl">
+        </ul>
+    </div>
 
     <div class="modal micromodal-slide" id="modal-start" aria-hidden="true">
         <div class="modal__overlay" tabindex="-1">
@@ -50,6 +55,9 @@
                 <main class="modal__content" id="modal-start-content">
                     <label>Scene Id</label>
                     <input type="text" id="in-scene-id">
+                    <br>
+                    <label>Username</label>
+                    <input type="text" id="in-username">
                 </main>
                 <footer class="modal__footer">
                     <button class="modal__btn modal__btn-primary" id="btn-load-scene" data-micromodal-close>Load</button>
