@@ -34,3 +34,4 @@ You can press Shift+X,Y,Z to invert axis selection
 * With F you can focus on selected objects
 
 * With Ctrl+S you can dump the scene to a JSON file
+test
