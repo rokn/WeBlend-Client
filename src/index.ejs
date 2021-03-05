@@ -13,13 +13,13 @@
     </noscript>
 
     <div id="mainGrid">
-<!--        <div id="selected-view">-->
-<!--            <div id="selected-position">-->
-<!--                <label>Position</label><br>-->
-<!--                <input type="number" class="selected-number" v-if="position" v-model="position.x">-->
-<!--                <input type="number" class="selected-number">-->
-<!--                <input type="number" class="selected-number">-->
-<!--            </div>-->
+        <div id="selected-view" v-if="transform">
+            <div id="selected-position">
+                <label>Position</label><br>
+                <input type="number" class="selected-number" v-model="position.x">
+                <input type="number" class="selected-number" v-model="position.y">
+                <input type="number" class="selected-number" v-model="position.z">
+            </div>
 <!--            <div id="selected-rotation">-->
 <!--                <label>Rotation</label><br>-->
 <!--                <input type="number" class="selected-number" rv-value="selectedRotation.x">-->
@@ -32,7 +32,7 @@
 <!--                <input type="number" class="selected-number" rv-value="selectedScale.y">-->
 <!--                <input type="number" class="selected-number" rv-value="selectedScale.z">-->
 <!--            </div>-->
-<!--        </div>-->
+        </div>
 
         <div id="viewportWrapper">
             <canvas id="mainCanvas" width="1200" height="600" tabindex="0"></canvas>

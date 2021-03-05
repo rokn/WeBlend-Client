@@ -1,12 +1,12 @@
 import {STORE_SELECTED_NODES} from 'scene';
-// import rivets from 'rivets'
 import {vec3} from 'gl-matrix'
+
+import {debounce} from 'lodash'
 
 import Vue from 'vue/dist/vue.esm.js'
 
 export class SelectedView {
     constructor(store, container) {
-        // rivets.bind(container, this);
 
         store.observe(STORE_SELECTED_NODES, (_, selected) => {
             if (selected === undefined || selected.length !== 1) {
@@ -24,9 +24,9 @@ export class SelectedView {
             el: container,
             data: this,
             watch: {
-                position: (newPosition, _) => {
+                position: debounce((newPosition, _) => {
                     this.transform.setPosition(newPosition);
-                }
+                }, 500)
             }
         })
     }
@@ -43,12 +43,6 @@ export class SelectedView {
         this.scale = vec3.clone(this.transform.scale);
 
         this.transform.subscribe(updateFromTransform)
-    }
-
-    updateModel(_, view) {
-        view.transform.setPosition(view.position);
-        view.transform.setRotation(view.rotation);
-        view.transform.setScale(view.scale);
     }
 
     clearFields() {
