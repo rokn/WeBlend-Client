@@ -9,8 +9,8 @@ body {
 
 #mainCanvas {
     border: solid;
-    margin: 0px auto;
-    display: block;
+    margin: 0px 30px;
+    display: inline;
     background-color: white;
 }
 
@@ -19,8 +19,9 @@ body {
 }
 
 #mainGrid {
-    display: grid;
-    grid-template-columns: 300px 800px;
+    display: flex;
+    justify-content: flex-start;
+    /*grid-template-columns: 300px 800px;*/
 }
 
 #selected-view {

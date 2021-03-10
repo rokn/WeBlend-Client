@@ -12,7 +12,7 @@
         JavaScript is required!
     </noscript>
 
-    <div id="mainGrid">
+    <span id="mainGrid">
 <!--        <div id="selected-view">-->
 <!--            <div id="selected-position">-->
 <!--                <label>Position</label><br>-->
@@ -34,15 +34,40 @@
 <!--            </div>-->
 <!--        </div>-->
 
-        <div id="viewportWrapper">
-            <canvas id="mainCanvas" width="1200" height="600" tabindex="0"></canvas>
-        </div>
-    </div>
-    <div>
-        <h4>Users</h4>
-        <ul id="userListUl">
-        </ul>
-    </div>
+<!--        <div id="viewportWrapper">-->
+            <canvas id="mainCanvas" width="800" height="500" tabindex="0"></canvas>
+<!--        </div>-->
+        <span id="sideBar">
+            <div>
+                <h4>Usage</h4>
+                <ul>
+                    <li>Middle mouse button + Shift or Alt+Left to move the camera. </li>
+                    <li>Middle mouse button or Ctrl+Left to rotate the camera. </li>
+                    <li>Scrolling zooms(you can use numpad +/-) </li>
+                    <li>With left click you can select objects(Hold Shift for mutliple) </li>
+                    <li>With G you can move objects </li>
+                    <li>With R you can rotate 1 object only </li>
+                    <li>With S you can scale 1 object only </li>
+                    Every one of these supports clicking X,Y or Z buttons to fix the axis.
+                    You can press Shift+X,Y,Z to invert axis selection
+                    <li>Tab enters the edit mode where you can:
+                        - Press G to move vertices
+                        - Press Delete to delete vertices
+                        - Press R to subdivide all faces
+                    </li>
+                    <li>With A you can add a Cube </li>
+                    <li>With Ctrl+A you can add a Fox </li>
+                    <li>With Alt+A you can add a Dragon </li>
+                    <li>With F you can focus on selected objects </li>
+                </ul>
+            </div>
+            <div>
+                <h4>Users</h4>
+                <ul id="userListUl">
+                </ul>
+            </div>
+        </span>
+    </span>
 
     <div class="modal micromodal-slide" id="modal-start" aria-hidden="true">
         <div class="modal__overlay" tabindex="-1">
